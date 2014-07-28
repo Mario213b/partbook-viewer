@@ -45,7 +45,7 @@
                     var loadedCount = 0;
                     diva.Events.subscribe('ViewerDidLoad', function(){
                         loadedCount += 1;
-                        if(loadedCount == 5)
+                        if(loadedCount == $('.diva-wrapper').length)
                         {
                             $('.diva-tools-right').addClass('diva-tools-right-alt').removeClass('diva-tools-right');
                             $('.diva-wrapper').draggable({
