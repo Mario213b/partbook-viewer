@@ -28,24 +28,36 @@
 
                     this.changePage = function(compositionID)
                     {
-                        var pageIndex = partbookData[this.partbookNum].indexOf(compositionID);
+                        diva.Events.unsubscribe(divaChangeHandle);
+                        var pageIndex = partbookData[this.partbookNum][compositionID][0] + pageOffsets[this.partbookNum];
                         this.divaElement.data('diva').gotoPageByIndex(pageIndex);
+                        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
                     };
 
                     this.getComposition = function(pageNum)
                     {
-                        return partbookData[this.partbookNum][pageNum];
+                        for(curComposition in partbookData[this.partbookNum])
+                        {
+                            if(pageNum in partbookData[this.partbookNum][curComposition])
+                            {
+                                return curComposition;
+                            }
+                        }
+                        return false;
                     };
                 }
 
                 function divaChangeListener(pageIndex, filename)
                 {
-                    diva.Events.unsubscribe(divaChangeHandle);
                     var partbookNum = filename.match(/\d{3}/g);
-                    if(currentComposition != parts[partbookNum].getComposition(pageIndex))
+                    var newComposition = parts[partbookNum].getComposition(pageIndex);
+                    if(newComposition && (currentComposition != newComposition))
                     {
-                        currentComposition = parts[partbookNum].getComposition(pageIndex);
-                        for(curKey in partbookData)
+                        currentComposition = newComposition;
+                        selectSkip = true;
+                        $("#piece-" + currentComposition).prop('selected', 'selected');
+                        selectSkip = false;
+                        for(curKey in parts)
                         {
                             if(curKey != partbookNum)
                             {
@@ -53,7 +65,6 @@
                             }
                         }
                     }
-                    divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
                 }
 
                 function generateDivaOptions(num)
@@ -79,8 +90,16 @@
                 }
                 var partbookData = {};
                 var parts = {};
+                var pageOffsets = { //as each book seems to be slightly off from its Diva indexes because of the notes in the beginning. No way to not hardcode this.
+                    '984': 3,
+                    '985': 1,
+                    '986': 1,
+                    '987': 1,
+                    '988': 1
+                };
                 var currentComposition;
                 var divaChangeHandle;
+                var selectSkip = true;
                 $(document).ready(function() 
                 {
                     $(".control-panel").draggable({});
@@ -95,8 +114,29 @@
                         dataType: 'json',
                         success: function (data, status, jqxhr)
                         {
-                            partbookData = data['csvData'];
                             pieces = data['pieces'];
+                            partbookData = data['csvData'];
+
+                            divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+                            for(curIndex in pieces)
+                            {
+                                var curID = pieces[curIndex][0];
+                                var curTitle = pieces[curIndex][1];
+                                $("#compositionSelect").append("<option id='piece-" + curID + "' pieceid='" + curID + "'>" + curTitle + "</option>");
+                            }
+
+                            $("#compositionSelect").on('change', function(e){
+                                if(!selectSkip)
+                                {
+                                    var newPiece = $(e.target).find(":selected");
+                                    var newPieceID = newPiece.attr('pieceid');
+
+                                    for(curPartIndex in parts)
+                                    {
+                                        parts[curPartIndex].changePage(newPieceID);
+                                    }
+                                }
+                            });
 
                             for(curKey in partbookData)
                             {
@@ -136,19 +176,7 @@
                                     });
                                 }
                             });
-                            divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
-                            for(curKey in pieces)
-                            {
-                                $("#compositionSelect").append("<option id='" + curKey + "'>" + pieces[curKey] + "</option>");
-                            }
-                            $("#compositionSelect").on('change', function(e){
-                                var newPieceID = $(e.target).find(":selected").attr('id');
-
-                                for(curPartIndex in parts)
-                                {
-                                    parts[curPartIndex].changePage(newPieceID);
-                                }
-                            });
+                            selectSkip = false;
                         }
                     });
                     
