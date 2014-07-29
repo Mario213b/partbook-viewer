@@ -38,7 +38,7 @@
                     {
                         for(curComposition in partbookData[this.partbookNum])
                         {
-                            if(pageNum in partbookData[this.partbookNum][curComposition])
+                            if(partbookData[this.partbookNum][curComposition].indexOf(pageNum) > -1)
                             {
                                 return curComposition;
                             }
@@ -97,11 +97,11 @@
                 var partbookData = {};
                 var parts = {};
                 var pageOffsets = { //as each book seems to be slightly off from its Diva indexes because of the notes in the beginning. No way to not hardcode this.
-                    '984': 3,
-                    '985': 1,
-                    '986': 1,
-                    '987': 1,
-                    '988': 1
+                    '984': 2,
+                    '985': 0,
+                    '986': 0,
+                    '987': 0,
+                    '988': 0
                 };
                 var currentComposition;
                 var divaChangeHandle;
