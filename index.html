@@ -19,6 +19,7 @@
             <script src="partbookViewer.js" type="text/javascript"></script>
 
             <script type="text/javascript">
+                //wrapper for a diva viewer with page functionality and synchronicity
                 function Part(div, num)
                 {
                     this.partbookNum = num;
@@ -26,19 +27,28 @@
 
                     this.divaElement.diva(generateDivaOptions(num));
 
+                    //changes currently visible page
                     this.changePage = function(compositionID)
                     {
+                        //unhook the diva event so it doesn't get called again
                         diva.Events.unsubscribe(divaChangeHandle);
+                        //get the initial page index for the composition ID, add the amount of pages that Diva/DIAMM add
                         var pageIndex = partbookData[this.partbookNum][compositionID][0] + pageOffsets[this.partbookNum];
+                        //change to the correct page
                         this.divaElement.data('diva').gotoPageByIndex(pageIndex);
+                        //turn the diva event back on
                         divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
                     };
 
+                    //gets the composition active at a given page number
                     this.getComposition = function(pageNum)
                     {
+                        //gets the diva index in, subtracts the diva/DIAMM offset
                         var adaptedPageNum = pageNum - pageOffsets[this.partbookNum];
+                        //iterates through partbook data
                         for(curComposition in partbookData[this.partbookNum])
                         {
+                            //return the first composition on that page
                             if(partbookData[this.partbookNum][curComposition].indexOf(adaptedPageNum) > -1)
                             {
                                 return curComposition;
@@ -48,16 +58,24 @@
                     };
                 }
 
+                //listener for when diva changes pages
                 function divaChangeListener(pageIndex, filename)
                 {
+                    //as there's one central diva events listener, get the partbook ID from the filename of the image
                     var partbookNum = filename.match(/\d{3}/g);
+                    //determine what composition is on this page
                     var newComposition = parts[partbookNum].getComposition(pageIndex);
+                    //if it changed
                     if(newComposition && (currentComposition != newComposition))
                     {
                         currentComposition = newComposition;
+
+                        //don't change pages/titles again
                         selectSkip = true;
                         $("#piece-" + currentComposition).prop('selected', 'selected');
                         selectSkip = false;
+
+                        //go through every part that is NOT the one that just changed and change pages
                         for(curKey in parts)
                         {
                             if(curKey != partbookNum)
@@ -68,12 +86,14 @@
                     }
                 }
 
+                //listener for simultaneous scrolling; not anonymous so that we can unbind
                 function simScrollListener()
                 {
                     $(".diva-outer").scrollTop($(this).scrollTop());
                     $(".diva-outer").scrollLeft($(this).scrollLeft());
                 }
 
+                //could be combined into Part
                 function generateDivaOptions(num)
                 {
                     return {
@@ -95,6 +115,7 @@
                         zoomLevel: 2
                     };
                 }
+
                 var partbookData = {};
                 var parts = {};
                 var pageOffsets = { //as each book seems to be slightly off from its Diva indexes because of the notes in the beginning. No way to not hardcode this.
@@ -108,11 +129,14 @@
                 var divaChangeHandle;
                 var selectSkip = true;
                 var simultaneousScrolling = false;
+
                 $(document).ready(function() 
                 {                
+                    //when the toggle scrolling button is called
                     $("#toggleScrolling").on('click', function(){
                         if(simultaneousScrolling)
                         {
+                            //turn page change listener back on
                             divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
                             $(".diva-outer").unbind('scroll', simScrollListener);
                             simultaneousScrolling = false;
@@ -120,6 +144,7 @@
                         }
                         else
                         {
+                            //unhook change listener as it'll keep changing when we change pages, which we DON'T want to happen if simultaneous scrolling is on
                             diva.Events.unsubscribe(divaChangeHandle);
                             $(".diva-outer").on('scroll', simScrollListener);
                             simultaneousScrolling = true;
@@ -127,11 +152,14 @@
                         }
                     });
 
+                    //control panel is draggable and minimizable
                     $(".control-panel").draggable({});
                     $("#toggleCPanel").on('click', function(){
                         $("#cPanelContent").toggle();
                         $("#toggleCPanel").text(($("#cPanelContent").css('display') == "none" ? "Maximize" : "Minimize"));
                     });
+
+                    //get the partbook data file
                     $.ajax(
                     {
                         url: 'partbooks.json',
@@ -139,11 +167,15 @@
                         dataType: 'json',
                         success: function (data, status, jqxhr)
                         {
+                            //parsing
                             pieces = data['pieces'];
                             partbookData = data['csvData'];
                             pieces2 = data['debugPieces'];
 
+                            //subscribe
                             divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+                            
+                            //fill the select
                             for(curIndex in pieces)
                             {
                                 var curID = pieces[curIndex][0];
@@ -151,6 +183,7 @@
                                 $("#compositionSelect").append("<option id='piece-" + curID + "' pieceid='" + curID + "'>" + curTitle + "</option>");
                             }
 
+                            //on-change listener to jump to pieces
                             $("#compositionSelect").on('change', function(e){
                                 if(!selectSkip)
                                 {
@@ -164,6 +197,7 @@
                                 }
                             });
 
+                            //create parts
                             for(curKey in partbookData)
                             {
                                 $("body").append("<div id='diva-wrapper-" + curKey + "' class='diva-wrapper'></div>");
@@ -177,22 +211,30 @@
                                 //once all five divas have loaded
                                 if(loadedCount == $('.diva-wrapper').length)
                                 {
+                                    //add minimize buttons in place of zoom labels
                                     $('.diva-buttons-label').html("<button class='minimizer'>Minimize</button>");
                                     $('.minimizer').on('click', function(e)
                                     {
+                                        //when minimize is clicked
                                         var wrapperParent = $(e.target).closest('.diva-wrapper');
                                         wrapperParent.hide();
+                                        //get the id of the partbook
                                         var bookTitle = wrapperParent.attr('id').match(/\d{3}/g);
+                                        //add a way to maximize it to the control panel
                                         $("#minimized-objects").append("<span id='maximize-" + bookTitle + "' class='maximize-wrapper'>" + bookTitle + "<button class='maximizer'>Maximize</button></span>");
+
+                                        //when that is clicked
                                         $('.maximizer').on('click', function(e)
                                         {
+                                            //get the ID and maximize
                                             var maximizeParent = $(e.target).closest('.maximize-wrapper');
                                             var bookTitle = maximizeParent.attr('id').match(/\d{3}/g);
                                             maximizeParent.remove();
                                             $("#diva-wrapper-" + bookTitle).show();
                                         });
                                     });
-
+                                    
+                                    //make draggable
                                     $('.diva-wrapper').draggable({
                                         start: function(e, ui)
                                         {
