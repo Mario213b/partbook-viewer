@@ -95,7 +95,8 @@
                         dataType: 'json',
                         success: function (data, status, jqxhr)
                         {
-                            partbookData = data;
+                            partbookData = data['csvData'];
+                            pieces = data['pieces'];
 
                             for(curKey in partbookData)
                             {
@@ -136,6 +137,18 @@
                                 }
                             });
                             divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+                            for(curKey in pieces)
+                            {
+                                $("#compositionSelect").append("<option id='" + curKey + "'>" + pieces[curKey] + "</option>");
+                            }
+                            $("#compositionSelect").on('change', function(e){
+                                var newPieceID = $(e.target).find(":selected").attr('id');
+
+                                for(curPartIndex in parts)
+                                {
+                                    parts[curPartIndex].changePage(newPieceID);
+                                }
+                            });
                         }
                     });
                     
@@ -149,6 +162,7 @@
                     <button style="float:right;" id="toggleCPanel">Minimize</button>
                 </div><br>
                 <div id="cPanelContent">
+                    Jump to piece: <select style="margin-left:10px" id="compositionSelect"></select>
                     <div id="minimized-objects"></div>
                 </div>
             </div>
