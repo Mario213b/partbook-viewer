@@ -18,7 +18,7 @@ for curFile in fileList:
 		if curLine['compositionKey'] not in pieces:
 			pieces[curLine['compositionKey']] = curLine['text_incipit_standard Copy'] 
 
-		csvDicts[dictIndex][curLine['compositionKey']] = range(int(curLine['folio_start']), int(curLine['folio_end']))
+		csvDicts[dictIndex][curLine['compositionKey']] = range(int(curLine['folio_start']), int(curLine['folio_end']) + 1)
 
 sortedPieces = sorted(pieces.iteritems(), key=operator.itemgetter(1))
 
