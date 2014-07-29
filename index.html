@@ -36,9 +36,10 @@
 
                     this.getComposition = function(pageNum)
                     {
+                        var adaptedPageNum = pageNum - pageOffsets[this.partbookNum];
                         for(curComposition in partbookData[this.partbookNum])
                         {
-                            if(partbookData[this.partbookNum][curComposition].indexOf(pageNum) > -1)
+                            if(partbookData[this.partbookNum][curComposition].indexOf(adaptedPageNum) > -1)
                             {
                                 return curComposition;
                             }
@@ -97,11 +98,11 @@
                 var partbookData = {};
                 var parts = {};
                 var pageOffsets = { //as each book seems to be slightly off from its Diva indexes because of the notes in the beginning. No way to not hardcode this.
-                    '984': 2,
-                    '985': 0,
-                    '986': 0,
-                    '987': 0,
-                    '988': 0
+                    '984': 4,
+                    '985': 2,
+                    '986': 2,
+                    '987': 2,
+                    '988': 2
                 };
                 var currentComposition;
                 var divaChangeHandle;
@@ -112,12 +113,14 @@
                     $("#toggleScrolling").on('click', function(){
                         if(simultaneousScrolling)
                         {
+                            divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
                             $(".diva-outer").unbind('scroll', simScrollListener);
                             simultaneousScrolling = false;
                             $("#toggleScrolling").text("Turn on simultaneous scrolling");
                         }
                         else
                         {
+                            diva.Events.unsubscribe(divaChangeHandle);
                             $(".diva-outer").on('scroll', simScrollListener);
                             simultaneousScrolling = true;
                             $("#toggleScrolling").text("Turn off simultaneous scrolling");
@@ -138,6 +141,7 @@
                         {
                             pieces = data['pieces'];
                             partbookData = data['csvData'];
+                            pieces2 = data['debugPieces'];
 
                             divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
                             for(curIndex in pieces)
@@ -213,7 +217,7 @@
                 </div><br>
                 <div id="cPanelContent">
                     <button id='toggleScrolling'>Turn on simultaneous scrolling</button><br>
-                    Jump to piece: <select style="margin-left:10px" id="compositionSelect"></select>
+                    Jump to piece: <select style="margin-left:10px" id="compositionSelect"><option>---</option></select>
                     <div id="minimized-objects"></div>
                 </div>
             </div>

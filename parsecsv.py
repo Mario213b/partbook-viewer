@@ -18,11 +18,11 @@ for curFile in fileList:
 		if curLine['compositionKey'] not in pieces:
 			pieces[curLine['compositionKey']] = curLine['text_incipit_standard Copy'] 
 
-		csvDicts[dictIndex][curLine['compositionKey']] = range(int(curLine['folio_start']), int(curLine['folio_end']) + 1)
+		csvDicts[dictIndex][curLine['compositionKey']] = range(int(curLine['folio_start']) - 1, int(curLine['folio_end'])) #-1 because diva is 0-index
 
 sortedPieces = sorted(pieces.iteritems(), key=operator.itemgetter(1))
 
-assembledDict = {'pieces': sortedPieces, 'csvData': csvDicts}
+assembledDict = {'pieces': sortedPieces, 'debugPieces': pieces, 'csvData': csvDicts}
 
 with open('partbooks.json', 'w') as outfile:
 	json.dump(assembledDict, outfile, ensure_ascii=False)
