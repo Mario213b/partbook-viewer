@@ -2,7 +2,7 @@
     <html lang="en">
         <head>
             <meta charset="utf-8" />
-            <title>Diva.js Demo Page</title>
+            <title>Diva.JS Partbook Viewer</title>
             <link rel="stylesheet" href="diva.js/build/css/diva.min.css" />
             <link rel="stylesheet" href="partbookViewer.css" />
             <!--[if IE]>
@@ -10,7 +10,12 @@
             <![endif]-->
             <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js" type="text/javascript"></script>
             <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
-            <script src="diva.js/build/js/diva.min.js" type="text/javascript"></script>
+            <!--<script src="diva.js/build/js/diva.min.js" type="text/javascript"></script>-->
+            <script src="diva.js/build/js/diva.js" type="text/javascript"></script>
+            <script src="diva.js/build/js/utils.js" type="text/javascript"></script>
+            <script src="diva.js/build/js/plugins/highlight.js" type="text/javascript"></script>
+
+
             <script src="partbookViewer.js" type="text/javascript"></script>
 
             <script type="text/javascript">
@@ -33,7 +38,7 @@
                     };
                 }
 
-                var divaChangeListener = function(pageIndex, filename)
+                function divaChangeListener(pageIndex, filename)
                 {
                     diva.Events.unsubscribe(divaChangeHandle);
                     var partbookNum = filename.match(/\d{3}/g);
@@ -49,7 +54,7 @@
                         }
                     }
                     divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
-                };
+                }
 
                 function generateDivaOptions(num)
                 {
@@ -78,6 +83,7 @@
                 var divaChangeHandle;
                 $(document).ready(function() 
                 {
+                    $(".control-panel").draggable({});
                     $.ajax(
                     {
                         url: 'partbooks.json',
@@ -89,17 +95,33 @@
 
                             for(curKey in partbookData)
                             {
-                                $("body").append("<div id='diva-wrapper" + curKey + "' class='diva-wrapper'></div>");
-                                parts[curKey] = (new Part('#diva-wrapper' + curKey, curKey));
+                                $("body").append("<div id='diva-wrapper-" + curKey + "' class='diva-wrapper'></div>");
+                                parts[curKey] = (new Part('#diva-wrapper-' + curKey, curKey));
                             }
 
                             var loadedCount = 0;
                             diva.Events.subscribe('ViewerDidLoad', function()
                             {
                                 loadedCount += 1;
+                                //once all five divas have loaded
                                 if(loadedCount == $('.diva-wrapper').length)
                                 {
-                                    $('.diva-tools-right').addClass('diva-tools-right-alt').removeClass('diva-tools-right');
+                                    $('.diva-buttons-label').html("<button class='minimizer'>Minimize</button>");
+                                    $('.minimizer').on('click', function(e)
+                                    {
+                                        var wrapperParent = $(e.target).closest('.diva-wrapper');
+                                        wrapperParent.hide();
+                                        var bookTitle = wrapperParent.attr('id').match(/\d{3}/g);
+                                        $("#minimized-objects").append("<span id='maximize-" + bookTitle + "' class='maximize-wrapper'>" + bookTitle + "<button class='maximizer'>Maximize</button></span>");
+                                        $('.maximizer').on('click', function(e)
+                                        {
+                                            var maximizeParent = $(e.target).closest('.maximize-wrapper');
+                                            var bookTitle = maximizeParent.attr('id').match(/\d{3}/g);
+                                            maximizeParent.remove();
+                                            $("#diva-wrapper-" + bookTitle).show();
+                                        });
+                                    });
+
                                     $('.diva-wrapper').draggable({
                                         start: function(e, ui)
                                         {
@@ -117,5 +139,9 @@
             </script>
         </head>
         <body>
+            <div class="control-panel">
+            Control Panel
+                <div id="minimized-objects"></div>
+            </div>
         </body>
     </html>
