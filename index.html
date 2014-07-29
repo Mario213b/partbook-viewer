@@ -67,6 +67,12 @@
                     }
                 }
 
+                function simScrollListener()
+                {
+                    $(".diva-outer").scrollTop($(this).scrollTop());
+                    $(".diva-outer").scrollLeft($(this).scrollLeft());
+                }
+
                 function generateDivaOptions(num)
                 {
                     return {
@@ -100,8 +106,24 @@
                 var currentComposition;
                 var divaChangeHandle;
                 var selectSkip = true;
+                var simultaneousScrolling = false;
                 $(document).ready(function() 
-                {
+                {                
+                    $("#toggleScrolling").on('click', function(){
+                        if(simultaneousScrolling)
+                        {
+                            $(".diva-outer").unbind('scroll', simScrollListener);
+                            simultaneousScrolling = false;
+                            $("#toggleScrolling").text("Turn on simultaneous scrolling");
+                        }
+                        else
+                        {
+                            $(".diva-outer").on('scroll', simScrollListener);
+                            simultaneousScrolling = true;
+                            $("#toggleScrolling").text("Turn off simultaneous scrolling");
+                        }
+                    });
+
                     $(".control-panel").draggable({});
                     $("#toggleCPanel").on('click', function(){
                         $("#cPanelContent").toggle();
@@ -190,6 +212,7 @@
                     <button style="float:right;" id="toggleCPanel">Minimize</button>
                 </div><br>
                 <div id="cPanelContent">
+                    <button id='toggleScrolling'>Turn on simultaneous scrolling</button><br>
                     Jump to piece: <select style="margin-left:10px" id="compositionSelect"></select>
                     <div id="minimized-objects"></div>
                 </div>
