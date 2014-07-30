@@ -40,9 +40,28 @@ body, html{
 	height:88%;
 }
 
-.diva-zoom-out-button .diva-zoom-in-button{
+.diva-tools .diva-tools-left .diva-zoom-out-button{
 	height:1em;
 	width:1em;
+	padding:2px;
+}
+.diva-tools .diva-tools-left .diva-zoom-in-button{
+	height:1em;
+	width:1em;
+	padding:2px;
+}
+
+.minimizer{
+	line-height:10px;
+}
+.diva-tools .diva-tools-right .diva-page-nav {
+	padding-top:5px;
+	font-size:10pt;
+	line-height:1em;
+}
+.diva-tools .diva-tools-right .diva-page-nav .diva-page-label{
+	font-size:10pt;
+	line-height:1em;
 }
 
 /*.diva-tools-right-alt{

@@ -236,7 +236,26 @@
                                 if(loadedCount == $('.diva-wrapper').length)
                                 {
                                     //add minimize buttons in place of zoom labels
-                                    $('.diva-buttons-label').html("<button class='minimizer'>Minimize</button>");
+                                    $('.diva-tools-left').append("<br><button class='minimizer'>Minimize</button>");
+                                    $('.diva-buttons-label').css('display', 'none');
+                                    $('.diva-goto-form').css('display', 'inline');
+                                    $('.diva-page-label').before('<br>');
+                                    $('.diva-page-label').css('display', 'inline');
+                                    $('.diva-tools').css('position', 'relative');
+                                    $('.diva-tools-right').css('right', 0);
+
+                                    curTitleIndex = $(".diva-title").length;
+                                    while(curTitleIndex--)
+                                    {
+                                        var curTitle = $($(".diva-title")[curTitleIndex]);
+                                        var target = $(curTitle.parent().children(".diva-tools").children(".diva-tools-right"));
+                                        curTitle.insertBefore(target);
+                                    }
+                                    $('.diva-title').css({
+                                        'position': 'absolute',
+                                        'width': '100%'
+                                    });
+
                                     $('.minimizer').on('click', function(e)
                                     {
                                         //when minimize is clicked
