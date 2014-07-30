@@ -20,8 +20,8 @@ body, html{
 	max-width:33%;
 	height:auto;
 	width:auto;
-	top:25px;
-	left:25px;
+	bottom:0px;
+	right:0px;
 	display:inline-block;
 	padding:5px;
 	border:thin black solid;
@@ -36,7 +36,16 @@ body, html{
 	margin-bottom:10px;
 }
 
-.diva-tools-right-alt{
+.diva-outer{
+	height:88%;
+}
+
+.diva-zoom-out-button .diva-zoom-in-button{
+	height:1em;
+	width:1em;
+}
+
+/*.diva-tools-right-alt{
   float: right;
 	height:30px;
 }
@@ -106,9 +115,4 @@ body, html{
   outline: none;
   margin: 0px;
   padding-top: 0px;
-}
-
-
-.diva-outer{
-	height:88%;
-}
+}*/
