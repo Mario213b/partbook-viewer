@@ -15,18 +15,24 @@ body, html{
 	border:thin black solid;
 	background-color:#FFF;
 }
-.control-panel{
-	max-height:50%;
-	max-width:33%;
-	height:auto;
-	width:auto;
+.control-panel-container{
+	position:fixed;
 	bottom:0px;
 	right:0px;
+	max-height:50%;
+	max-width:33%;
+	height:50%;
+	width:33%;
+	z-index:4;
+}
+.control-panel{
+	height:auto;
+	width:auto;
 	display:inline-block;
 	padding:5px;
 	border:thin black solid;
 	background-color:#CCC;
-	position:fixed;
+	position:absolute;
 	z-index:4;
 }
 
@@ -34,6 +40,7 @@ body, html{
 	height:auto;
 	margin-top:0;
 	margin-bottom:10px;
+	position:relative;
 }
 
 .diva-outer{
@@ -54,14 +61,33 @@ body, html{
 .minimizer{
 	line-height:10px;
 }
+
+.diva-tools .diva-tools-right {
+	right: 0px;
+}
 .diva-tools .diva-tools-right .diva-page-nav {
 	padding-top:5px;
+	padding-right:0px;
 	font-size:10pt;
 	line-height:1em;
+}
+
+.diva-tools .diva-tools-right .diva-page-nav .diva-goto-form {
+	margin-right:-2px;
+	display: inline;
 }
 .diva-tools .diva-tools-right .diva-page-nav .diva-page-label{
 	font-size:10pt;
 	line-height:1em;
+	padding-right:0;
+	display: inline;
+}
+.diva-tools .diva-tools-left .diva-buttons-label {
+    display: none;
+}
+.diva-tools .diva-title{
+	position:absolute;
+	width:100%;
 }
 
 /*.diva-tools-right-alt{
