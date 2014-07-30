@@ -89,8 +89,18 @@
                 //listener for simultaneous scrolling; not anonymous so that we can unbind
                 function simScrollListener()
                 {
-                    $(".diva-outer").scrollTop($(this).scrollTop());
-                    $(".diva-outer").scrollLeft($(this).scrollLeft());
+                    var scrolledPart = $(this).parent().attr('id').match(/\d{3}/g)[0];
+                    var scrollDiffY = $(this).scrollTop() - oldScrollTopYList[scrolledPart];
+                    var scrollDiffX = $(this).scrollLeft() - oldScrollTopXList[scrolledPart];
+                    for(curPart in parts)
+                    {
+                        if(curPart != scrolledPart)
+                        {
+                            $("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop($("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop() + scrollDiffY);
+                            $("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft($("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft() + scrollDiffX);    
+                        }
+                    }
+                    updateScrollArchive();
                 }
 
                 //could be combined into Part
@@ -116,6 +126,15 @@
                     };
                 }
 
+                function updateScrollArchive()
+                {
+                    for(curPart in parts)
+                    {
+                        oldScrollTopYList[curPart] = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop();
+                        oldScrollTopXList[curPart] = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft();
+                    }
+                }
+
                 var partbookData = {};
                 var parts = {};
                 var pageOffsets = { //as each book seems to be slightly off from its Diva indexes because of the notes in the beginning. No way to not hardcode this.
@@ -129,6 +148,8 @@
                 var divaChangeHandle;
                 var selectSkip = true;
                 var simultaneousScrolling = false;
+                var oldScrollTopYList = {};
+                var oldScrollTopXList = {};
 
                 $(document).ready(function() 
                 {                
@@ -144,8 +165,11 @@
                         }
                         else
                         {
+                            updateScrollArchive();
                             //unhook change listener as it'll keep changing when we change pages, which we DON'T want to happen if simultaneous scrolling is on
                             diva.Events.unsubscribe(divaChangeHandle);
+                            var oldScrollTopY = 0;
+                            var oldScrollTopX = 0;
                             $(".diva-outer").on('scroll', simScrollListener);
                             simultaneousScrolling = true;
                             $("#toggleScrolling").text("Turn off simultaneous scrolling");
