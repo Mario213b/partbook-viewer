@@ -19,8 +19,6 @@ body, html{
 	position:fixed;
 	bottom:0px;
 	right:0px;
-	max-height:50%;
-	max-width:33%;
 	height:50%;
 	width:33%;
 	z-index:4;
