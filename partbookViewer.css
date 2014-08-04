@@ -39,6 +39,7 @@ body, html{
 	margin-top:0;
 	margin-bottom:10px;
 	position:relative;
+	text-align:center;
 }
 
 .diva-outer{
@@ -49,11 +50,13 @@ body, html{
 	height:1em;
 	width:1em;
 	padding:2px;
+	z-index: inherit;
 }
 .diva-tools .diva-tools-left .diva-zoom-in-button{
 	height:1em;
 	width:1em;
 	padding:2px;
+	z-index: inherit;
 }
 
 .minimizer{
@@ -73,6 +76,7 @@ body, html{
 .diva-tools .diva-tools-right .diva-page-nav .diva-goto-form {
 	margin-right:-2px;
 	display: inline;
+	z-index: inherit;
 }
 .diva-tools .diva-tools-right .diva-page-nav .diva-page-label{
 	font-size:10pt;
@@ -83,79 +87,17 @@ body, html{
 .diva-tools .diva-tools-left .diva-buttons-label {
     display: none;
 }
+.diva-tools .diva-tools-left {
+	position:relative;
+	z-index:5;
+}
+.diva-tools .diva-tools-right{
+	position:relative;
+	z-index:5;
+}
 .diva-tools .diva-title{
 	position:absolute;
+	z-index:0;
 	width:100%;
+	text-align:center;
 }
-
-/*.diva-tools-right-alt{
-  float: right;
-	height:30px;
-}
-
-.diva-tools .diva-tools-right .diva-button {
-  cursor: pointer;
-  height: 32px;
-  width: 32px;
-  background-color: #f1f1f1;
-  background-repeat: no-repeat;
-  background-position: center;
-  border: 1px solid #99bbe8;
-  float: right;
-}
-.diva-tools .diva-tools-right-alt .diva-button:hover {
-  background-color: #fdfdfd;
-}
-.diva-tools .diva-tools-right-alt .diva-grid-icon {
-  cursor: pointer;
-  height: 32px;
-  width: 32px;
-  background-color: #f1f1f1;
-  background-repeat: no-repeat;
-  background-position: center;
-  border: 1px solid #99bbe8;
-  float: right;
-  background-image: url("../img/grid.png");
-}
-.diva-tools .diva-tools-right-alt .diva-grid-icon:hover {
-  background-color: #fdfdfd;
-}
-.diva-tools .diva-tools-right-alt .diva-grid-icon.diva-in-grid {
-  background-image: url("../img/document.png");
-}
-.diva-tools .diva-tools-right-alt .diva-link-icon {
-  cursor: pointer;
-  height: 32px;
-  width: 32px;
-  background-color: #f1f1f1;
-  background-repeat: no-repeat;
-  background-position: center;
-  border: 1px solid #99bbe8;
-  float: right;
-  background-image: url("../img/link.png");
-}
-.diva-tools .diva-tools-right-alt .diva-link-icon:hover {
-  background-color: #fdfdfd;
-}
-.diva-tools .diva-tools-right-alt .diva-page-nav {
-  float: left;
-  text-align: right;
-  padding-right: 4px;
-  white-space: nowrap;
-  line-height: 32px;
-}
-.diva-tools .diva-tools-right-alt .diva-page-nav .diva-page-label {
-  float: left;
-  padding-top: 1px;
-  padding-right: 0.5em;
-  line-height: 32px;
-}
-.diva-tools .diva-tools-right-alt .diva-page-nav .diva-goto-form {
-  float: right;
-}
-.diva-tools .diva-tools-right-alt .diva-page-nav .diva-goto-form .diva-input {
-  width: 30px;
-  outline: none;
-  margin: 0px;
-  padding-top: 0px;
-}*/
