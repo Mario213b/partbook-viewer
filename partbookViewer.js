@@ -55,6 +55,7 @@ function Part(div, num, data)
     //scrolls currently visible page to a different position down the page
     this.changeCompPartial = function(compositionID, percent)
     {
+        diva.Events.unsubscribe(divaChangeHandle);
         //grab the heightAbovePages array and array of page indices
         var heightArr = divaElement.data('diva').getSettings().heightAbovePages;
         var pagesArr = this.pagesFor(compositionID);
@@ -66,16 +67,21 @@ function Part(div, num, data)
         //scroll to the percentage
         var newTop = firstPageHeight + ((lastPageHeight - firstPageHeight) * parseFloat(percent));
         divaElement.children(".diva-outer").scrollTop(newTop);
+        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
     this.scrollVertical = function(diff)
     {
+        diva.Events.unsubscribe(divaChangeHandle);
         divaElement.children(".diva-outer").scrollTop(divaElement.children(".diva-outer").scrollTop() + diff);
+        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
     this.scrollHorizontal = function(diff)
     {
+        diva.Events.unsubscribe(divaChangeHandle);
         divaElement.children(".diva-outer").scrollLeft(divaElement.children(".diva-outer").scrollLeft() + diff);
+        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
     //gets the composition active at a given page number
@@ -182,21 +188,30 @@ function PartsController(partArr)
         return true;
     };
 
-    this.scrollVerticalBy = function(diff)
+    this.scrollVerticalBy = function(lastChangedIn, diff)
     {
+        lastChanged = (lastChangedIn === undefined ? undefined : lastChangedIn);
+
         for(curPart in parts)
         {
-            parts[curPart].scrollVertical(diff);
+            if(curPart != lastChanged)
+            {
+                parts[curPart].scrollVertical(diff);
+            }
         }
     };
 
-    this.scrollHorizontalBy = function(diff)
+    this.scrollHorizontalBy = function(lastChangedIn, diff)
     {
+        lastChanged = (lastChangedIn === undefined ? undefined : lastChangedIn);
+
         for(curPart in parts)
         {
-            parts[curPart].scrollHorizontal(diff);
+            if(curPart != lastChanged)
+            {
+                parts[curPart].scrollHorizontal(diff);
+            }
         }
-
     };
 
 }
@@ -255,7 +270,8 @@ function simScrollListener()
 
     if(scrollDiffX !== 0)
     {
-        controller.scrollHorizontalBy(scrollDiffX);
+        console.log(scrollDiffX);
+        controller.scrollHorizontalBy(scrolledPart, scrollDiffX);
     }
 
     //get page array and figure out where the initial indices for this composition and the next one are
@@ -267,7 +283,7 @@ function simScrollListener()
     {
         var scrollDiffY = $("#diva-wrapper-" + scrolledPart + " > .diva-outer").scrollTop() - parts[scrolledPart].oldScrollY;
 
-        controller.scrollVerticalBy(scrollDiffY);
+        controller.scrollVerticalBy(scrolledPart, scrollDiffY);
     }
     //else: work by percents
     else 
