@@ -43,7 +43,7 @@ body, html{
 }
 
 .diva-outer{
-	height:88%;
+	height:calc(100% - 2.7em);
 }
 
 .diva-tools .diva-tools-left .diva-zoom-out-button{
@@ -100,4 +100,5 @@ body, html{
 	z-index:0;
 	width:100%;
 	text-align:center;
+	font-size:1.5em;
 }

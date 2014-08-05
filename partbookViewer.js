@@ -61,9 +61,9 @@ function Part(div, num, data)
         var heightArr = divaElement.data('diva').getSettings().heightAbovePages;
         var pagesArr = this.pagesFor(compositionID);
 
-        //get the heights of the first and last pages
+        //get the top pixel values for the first page and the page after the last
         var firstPageHeight = heightArr[pagesArr[0]];
-        var lastPageHeight = heightArr[pagesArr[pagesArr.length - 1]];
+        var lastPageHeight = heightArr[pagesArr[pagesArr.length - 1] + 1];
 
         //scroll to the percentage
         var newTop = firstPageHeight + ((lastPageHeight - firstPageHeight) * parseFloat(percent));
