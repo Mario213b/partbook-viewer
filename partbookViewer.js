@@ -15,6 +15,7 @@ var scrollTimeout;
 function Part(div, num, data)
 {
     var partbookNum = num;
+    var offset = pageOffsets[partbookNum];
     var partbookData = data;
     var divaElement = $(div);
     this.oldScrollX;
@@ -45,7 +46,7 @@ function Part(div, num, data)
         //unhook the diva event so it doesn't get called again
         diva.Events.unsubscribe(divaChangeHandle);
         //get the initial page index for the composition ID, add the amount of pages that Diva/DIAMM add
-        var pageIndex = partbookData[compositionID][0] + pageOffsets[partbookNum];
+        var pageIndex = partbookData[compositionID][0] + offset;
         //change to the correct page
         divaElement.data('diva').gotoPageByIndex(pageIndex);
         //turn the diva event back on
@@ -88,7 +89,7 @@ function Part(div, num, data)
     this.getComposition = function(pageNum)
     {
         //gets the diva index in, subtracts the diva/DIAMM offset
-        var adaptedPageNum = Math.max(pageNum - pageOffsets[partbookNum], 0);
+        var adaptedPageNum = Math.max(pageNum - offset, 0);
         //iterates through partbook data
         for(curComposition in partbookData)
         {
@@ -103,7 +104,16 @@ function Part(div, num, data)
 
     this.pagesFor = function(composition)
     {
-        return partbookData[composition];
+        if(partbookData[composition])
+        {
+            return partbookData[composition].map(function(el){
+                return (el + offset);
+            });
+        }
+        else
+        {
+            return undefined;
+        }
     };
 }
 
