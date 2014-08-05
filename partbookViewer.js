@@ -17,6 +17,8 @@ function Part(div, num, data)
     var partbookNum = num;
     var partbookData = data;
     var divaElement = $(div);
+    this.oldScrollX;
+    this.oldScrollY;
 
     divaElement.diva({
         adaptivePadding: 0,
@@ -64,6 +66,16 @@ function Part(div, num, data)
         //scroll to the percentage
         var newTop = firstPageHeight + ((lastPageHeight - firstPageHeight) * parseFloat(percent));
         divaElement.children(".diva-outer").scrollTop(newTop);
+    };
+
+    this.scrollVertical = function(diff)
+    {
+        divaElement.children(".diva-outer").scrollTop(divaElement.children(".diva-outer").scrollTop() + diff);
+    };
+
+    this.scrollHorizontal = function(diff)
+    {
+        divaElement.children(".diva-outer").scrollLeft(divaElement.children(".diva-outer").scrollLeft() + diff);
     };
 
     //gets the composition active at a given page number
@@ -122,7 +134,15 @@ function PartsController(partArr)
             }
         }
 
-        $("#piece-" + currentComposition).attr('selected', 'selected');
+        if($("#piece-"+currentComposition).length == 1)
+        {
+            $("#piece-" + currentComposition).attr('selected', 'selected');
+        }
+        else
+        {
+            $("#piece-default").attr('selected', 'selected');
+        }
+
     };
 
     //returns the current composition in classic Java syntax
@@ -137,8 +157,8 @@ function PartsController(partArr)
         lastChanged = (lastChangedIn === undefined ? undefined : lastChangedIn);
 
         //six options here: percent is valid or undefined, newComp is changed, unchanged, or undefined
-        //if newComp changed
-        if(newComposition && (newComposition != currentComposition))
+        //if newComp changed ("false" is acceptable as a possible value)
+        if(newComposition !== undefined && (newComposition != currentComposition))
         {
             currentComposition = newComposition;
             //either percent option
@@ -161,6 +181,24 @@ function PartsController(partArr)
         this.realignPages();
         return true;
     };
+
+    this.scrollVerticalBy = function(diff)
+    {
+        for(curPart in parts)
+        {
+            parts[curPart].scrollVertical(diff);
+        }
+    };
+
+    this.scrollHorizontalBy = function(diff)
+    {
+        for(curPart in parts)
+        {
+            parts[curPart].scrollHorizontal(diff);
+        }
+
+    };
+
 }
 
 //listener for when diva changes pages
@@ -178,6 +216,12 @@ function divaChangeListener(pageIndex, filename)
         }
     }
 
+    //temporary workaround while the one diva events listener is still nonfunctional - the filename will match the hovered partbookNum if we want it to count
+    if(!filename.match(partbookNum))
+    {
+        return;
+    }
+
     var newComposition = parts[partbookNum].getComposition(pageIndex);
     controller.safelyChangePosition(partbookNum, newComposition);
 }
@@ -186,8 +230,8 @@ function updateScrollArchive()
 {
     for(curPart in parts)
     {
-        oldScrollTopYList[curPart] = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop();
-        oldScrollTopXList[curPart] = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft();
+        parts[curPart].oldScrollX = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft();
+        parts[curPart].oldScrollY = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop();
     }
 }
 
@@ -206,30 +250,42 @@ function simScrollListener()
     var scrolledPart = $(this).parent().attr('id').match(/\d{3}/g)[0];
     var scrolledDivaInstance = $("#diva-wrapper-" + scrolledPart).data('diva');
 
+    //take care of horizontal scrolling - this can be done by pixels
+    var scrollDiffX = $("#diva-wrapper-" + scrolledPart + " > .diva-outer").scrollLeft() - parts[scrolledPart].oldScrollX;
+
+    if(scrollDiffX !== 0)
+    {
+        controller.scrollHorizontalBy(scrollDiffX);
+    }
+
     //get page array and figure out where the initial indices for this composition and the next one are
     var tempCurrent = controller.getCurrent();
     var partPageArr = parts[scrolledPart].pagesFor(tempCurrent);
     
-    //temporary: if the composition doesn't exist on that page or if any other error happens, reinstate the listener and bail
+    //if the composition doesn't exist on that part, scroll by pixels
     if(!partPageArr)
     {
-        $(".diva-outer").on('scroll', simScrollListener);
-        return;
+        var scrollDiffY = $("#diva-wrapper-" + scrolledPart + " > .diva-outer").scrollTop() - parts[scrolledPart].oldScrollY;
+
+        controller.scrollVerticalBy(scrollDiffY);
     }
-    
-    var startIndex = partPageArr[0];
-    var endIndex = partPageArr[partPageArr.length - 1] + 1;
+    //else: work by percents
+    else 
+    {
+        var startIndex = partPageArr[0];
+        var endIndex = partPageArr[partPageArr.length - 1] + 1;
 
-    //grab height array for current page and calculate the percentage into the current piece
-    var heightArr = scrolledDivaInstance.getSettings().heightAbovePages;
-    var heightDiff = heightArr[endIndex] - heightArr[startIndex];
+        //grab height array for current page and calculate the percentage into the current piece
+        var heightArr = scrolledDivaInstance.getSettings().heightAbovePages;
+        var heightDiff = heightArr[endIndex] - heightArr[startIndex];
 
-    var percent = ($("#diva-wrapper-" + scrolledPart + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
+        var percent = ($("#diva-wrapper-" + scrolledPart + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
 
-    //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
-    controller.safelyChangePosition(scrolledPart, undefined, percent); 
+        //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
+        controller.safelyChangePosition(scrolledPart, undefined, percent); 
+    }
 
-    //updateScrollArchive();
+    updateScrollArchive();
     $(".diva-outer").on('scroll', simScrollListener);
 }
 
