@@ -198,6 +198,7 @@ function PartsController(partArr)
         return true;
     };
 
+    //scrolls everything by "diff" pixels; does not do lastChanged
     this.scrollVerticalBy = function(lastChangedIn, diff)
     {
         lastChanged = (lastChangedIn === undefined ? undefined : lastChangedIn);
@@ -211,6 +212,7 @@ function PartsController(partArr)
         }
     };
 
+    //scrolls everything by "diff" pixels; does not do lastChanged
     this.scrollHorizontalBy = function(lastChangedIn, diff)
     {
         lastChanged = (lastChangedIn === undefined ? undefined : lastChangedIn);
@@ -222,6 +224,53 @@ function PartsController(partArr)
                 parts[curPart].scrollHorizontal(diff);
             }
         }
+    };
+
+    //zooms every part in by 1
+    this.zoomInAll = function()
+    {
+        diva.Events.unsubscribe(divaChangeHandle);
+        for(curPart in parts)
+        {
+            $("#diva-wrapper-" + curPart).data('diva').zoomIn();
+        }
+        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+    };
+
+    //zooms every part out by 1
+    this.zoomOutAll = function()
+    {
+        diva.Events.unsubscribe(divaChangeHandle);
+        for(curPart in parts)
+        {
+            $("#diva-wrapper-" + curPart).data('diva').zoomOut();
+        }
+        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+    };
+
+    //returns all to zoom level 2
+    this.defaultZoomAll = function()
+    {
+        diva.Events.unsubscribe(divaChangeHandle);
+        for(curPart in parts)
+        {
+            $("#diva-wrapper-" + curPart).data('diva').setZoomLevel(2);
+        }
+        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+    };
+
+    //horizontally centers all parts
+    this.horizCenterAll = function()
+    {
+        diva.Events.unsubscribe(divaChangeHandle);
+        for(curPart in parts)
+        {
+            var wrapperWidth = $("#diva-wrapper-" + curPart).width();
+            var outerWidth = $("#diva-wrapper-" + curPart).children(".diva-outer").children(".diva-inner").width();
+            var centeredLeft = (outerWidth - wrapperWidth) / 2;
+            $("#diva-wrapper-" + curPart).children(".diva-outer").scrollLeft(centeredLeft);
+        }
+        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
 }
@@ -280,7 +329,6 @@ function simScrollListener()
 
     if(scrollDiffX !== 0)
     {
-        console.log(scrollDiffX);
         controller.scrollHorizontalBy(scrolledPart, scrollDiffX);
     }
 
@@ -386,6 +434,14 @@ $(document).ready(function()
                 parts[curKey] = (new Part('#diva-wrapper-' + curKey, curKey, data['csvData'][curKey]));
                 controller = new PartsController(parts);
             }
+
+            $("#zoomInAll").on('click', controller.zoomInAll);
+
+            $("#zoomOutAll").on('click', controller.zoomOutAll);
+
+            $("#defaultZoomAll").on('click', controller.defaultZoomAll);
+
+            $("#horizCenterAll").on('click', controller.horizCenterAll);
 
             var loadedCount = 0;
             diva.Events.subscribe('ViewerDidLoad', function()
