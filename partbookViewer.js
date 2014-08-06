@@ -366,7 +366,7 @@ function simScrollListener()
 $(document).ready(function() 
 {
     //control panel is draggable and minimizable
-    $(".control-panel").draggable({});
+    $(".control-panel").draggable({containment: "window"});
     $("#toggleCPanel").on('click', function(){
         $("#cPanelContent").toggle();
         $("#toggleCPanel").text(($("#cPanelContent").css('display') == "none" ? "Maximize" : "Minimize"));
@@ -490,6 +490,7 @@ $(document).ready(function()
                     
                     //make draggable
                     $('.diva-wrapper').draggable({
+                        containment: "parent",
                         start: function(e, ui)
                         {
                             $('.diva-wrapper').css('z-index', 2);
