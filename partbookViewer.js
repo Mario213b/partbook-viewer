@@ -11,6 +11,7 @@ var pageOffsets = { //as each book seems to be slightly off from its Diva indexe
 var oldScrollTopYList = {};
 var oldScrollTopXList = {};
 var scrollTimeout;
+var dragAccessedOrder = [];
 
 function Part(div, num, data)
 {
@@ -363,10 +364,40 @@ function simScrollListener()
     $(".diva-outer").on('scroll', simScrollListener);
 }
 
-$(document).ready(function() 
+function updateStackWith(which)
 {
-    //control panel is draggable and minimizable
-    $(".control-panel").draggable({containment: "window"});
+    var indexHold = dragAccessedOrder.indexOf(which);
+    var newOrder = [];
+
+    for(var x = 0; x < 6; x++)
+    {
+        if(x !== indexHold)
+        {
+            newOrder.push(dragAccessedOrder[x]);
+        }
+    }
+
+    newOrder.push(dragAccessedOrder[indexHold]);
+
+    dragAccessedOrder = newOrder;
+
+    for(var x = 0; x < 6; x++)
+    {
+        $("#" + dragAccessedOrder[x]).css('z-index', x + 2);
+    }
+}
+
+$(document).ready(function() 
+{        
+    //control panel is draggable
+    $(".control-panel").draggable({
+        containment: "window",
+        start: function(e, ui)
+        {
+            updateStackWith(ui.helper.parent().attr('id'));
+        }
+    });
+
     $("#toggleCPanel").on('click', function(){
         $("#cPanelContent").toggle();
         $("#toggleCPanel").text(($("#cPanelContent").css('display') == "none" ? "Maximize" : "Minimize"));
@@ -487,16 +518,23 @@ $(document).ready(function()
                             $("#diva-wrapper-" + bookTitle).show();
                         });
                     });
-                    
+
                     //make draggable
                     $('.diva-wrapper').draggable({
                         containment: "parent",
                         start: function(e, ui)
                         {
-                            $('.diva-wrapper').css('z-index', 2);
-                            ui.helper.css('z-index', 3);
+                            updateStackWith(ui.helper.attr('id'));
                         }
                     });
+
+                    dragAccessedOrder.push($($('.control-panel-container')[0]).attr('id'));
+
+                    var curDiva = $('.diva-wrapper').length;
+                    while(curDiva--)
+                    {
+                        dragAccessedOrder.push($($('.diva-wrapper')[curDiva]).attr('id'));
+                    }
 
                     //subscribe after everything so this doesn't get called accidentally
                     divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);

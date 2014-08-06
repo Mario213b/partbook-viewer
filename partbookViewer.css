@@ -21,7 +21,6 @@ body, html{
 	right:0px;
 	height:50%;
 	width:33%;
-	z-index:4;
 }
 .control-panel{
 	height:auto;
@@ -31,7 +30,6 @@ body, html{
 	border:thin black solid;
 	background-color:#CCC;
 	position:absolute;
-	z-index:4;
 }
 
 .diva-tools{
