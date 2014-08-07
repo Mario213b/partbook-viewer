@@ -25,11 +25,13 @@
                         <span style="float:left;margin-right:50px;">Control Panel</span>
                         <button style="float:right;" id="toggleCPanel">Minimize</button>
                     </div><br>
-                    <div id="cPanelContent">
+                    <div id="control-panel-content">
                         <button id='toggleScrolling'>Turn on simultaneous scrolling</button><br>
                         <button id='zoomInAll'>Zoom in all</button><button id='zoomOutAll'>Zoom out all</button><button id='defaultZoomAll'>Return all to default zoom</button><br>
                         <button id='horizCenterAll'>Horizontally center all</button><br>
-                        Jump to piece: <select style="margin-left:10px" id="compositionSelect"><option id="piece-default">---</option></select>
+                        Jump to piece: <select style="margin-left:10px" id="compositionSelect"><option id="piece-default">---</option></select><br>
+                        Current pieces: 
+                        <div id="current-pieces"></div>
                         <div id="minimized-objects"></div>
                     </div>
                 </div>

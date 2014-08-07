@@ -40,6 +40,10 @@ body, html{
 	text-align:center;
 }
 
+.part-info{
+	margin-left:0.4em;
+}
+
 .diva-outer{
 	height:calc(100% - 2.7em);
 }

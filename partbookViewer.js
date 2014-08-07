@@ -12,6 +12,103 @@ var oldScrollTopYList = {};
 var oldScrollTopXList = {};
 var scrollTimeout;
 var dragAccessedOrder = [];
+var pieces = {};
+var pieces2 = {};
+
+//listener for when diva changes pages
+function divaChangeListener(pageIndex, filename)
+{
+    controller.updateAll();
+}
+
+function updateScrollArchive()
+{
+    for (curPart in parts)
+    {
+        parts[curPart].oldScrollX = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft();
+        parts[curPart].oldScrollY = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop();
+    }
+}
+
+function simScrollListener()
+{
+    //we only want the one the mouse is over currently
+    if (!$(this).is(":hover"))
+    {
+        return;
+    }
+
+    //temporarily unbind the scroll listener
+    $(".diva-outer").unbind('scroll', simScrollListener);
+
+    //find the scrolled part and its instance
+    var scrolledPart = $(this).parent().attr('id').match(/\d{3}/g)[0];
+    var scrolledDivaInstance = $("#diva-wrapper-" + scrolledPart).data('diva');
+
+    //take care of horizontal scrolling - this can be done by pixels
+    var scrollDiffX = $("#diva-wrapper-" + scrolledPart + " > .diva-outer").scrollLeft() - parts[scrolledPart].oldScrollX;
+
+    if (scrollDiffX !== 0)
+    {
+        controller.scrollHorizontalBy(scrolledPart, scrollDiffX);
+    }
+
+    //get page array and figure out where the initial indices for this composition and the next one are
+    var tempCurrent = controller.getCurrent();
+    var partPageArr = parts[scrolledPart].pagesFor(tempCurrent);
+    
+    //if the composition doesn't exist on that part, scroll by pixels
+    if (!partPageArr)
+    {
+        var scrollDiffY = $("#diva-wrapper-" + scrolledPart + " > .diva-outer").scrollTop() - parts[scrolledPart].oldScrollY;
+
+        controller.scrollVerticalBy(scrolledPart, scrollDiffY);
+    }
+    //else: work by percents
+    else 
+    {
+        var startIndex = partPageArr[0];
+        var endIndex = partPageArr[partPageArr.length - 1] + 1;
+
+        //grab height array for current page and calculate the percentage into the current piece
+        var heightArr = scrolledDivaInstance.getSettings().heightAbovePages;
+        var heightDiff = heightArr[endIndex] - heightArr[startIndex];
+
+        var percent = ($("#diva-wrapper-" + scrolledPart + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
+
+        //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
+        controller.safelyChangePosition(scrolledPart, undefined, percent); 
+            console.log('here1');
+    }
+
+            console.log('here2');
+    updateScrollArchive();
+            console.log('here3');
+    $(".diva-outer").on('scroll', simScrollListener);
+}
+
+function updateStackWith(which)
+{
+    var indexHold = dragAccessedOrder.indexOf(which);
+    var newOrder = [];
+
+    for (var x = 0; x < 6; x++)
+    {
+        if(x !== indexHold)
+        {
+            newOrder.push(dragAccessedOrder[x]);
+        }
+    }
+
+    newOrder.push(dragAccessedOrder[indexHold]);
+
+    dragAccessedOrder = newOrder;
+
+    for (var x = 0; x < 6; x++)
+    {
+        $("#" + dragAccessedOrder[x]).css('z-index', x + 2);
+    }
+}
 
 function Part(div, num, data)
 {
@@ -44,20 +141,17 @@ function Part(div, num, data)
     //changes currently visible page
     this.changeComp = function(compositionID)
     {
-        //unhook the diva event so it doesn't get called again
-        diva.Events.unsubscribe(divaChangeHandle);
+        console.log("changeComp for", partbookNum);
         //get the initial page index for the composition ID, add the amount of pages that Diva/DIAMM add
         var pageIndex = partbookData[compositionID][0] + offset;
         //change to the correct page
         divaElement.data('diva').gotoPageByIndex(pageIndex);
-        //turn the diva event back on
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
     //scrolls currently visible page to a different position down the page
     this.changeCompPartial = function(compositionID, percent)
     {
-        diva.Events.unsubscribe(divaChangeHandle);
+        console.log("changeCompPartial for", partbookNum);
         //grab the heightAbovePages array and array of page indices
         var heightArr = divaElement.data('diva').getSettings().heightAbovePages;
         var pagesArr = this.pagesFor(compositionID);
@@ -69,21 +163,25 @@ function Part(div, num, data)
         //scroll to the percentage
         var newTop = firstPageHeight + ((lastPageHeight - firstPageHeight) * parseFloat(percent));
         divaElement.children(".diva-outer").scrollTop(newTop);
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+        this.updateComposition();
     };
 
     this.scrollVertical = function(diff)
     {
-        diva.Events.unsubscribe(divaChangeHandle);
         divaElement.children(".diva-outer").scrollTop(divaElement.children(".diva-outer").scrollTop() + diff);
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+        this.updateComposition();
     };
 
     this.scrollHorizontal = function(diff)
     {
-        diva.Events.unsubscribe(divaChangeHandle);
         divaElement.children(".diva-outer").scrollLeft(divaElement.children(".diva-outer").scrollLeft() + diff);
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
+    };
+
+    this.updateComposition = function()
+    {
+        console.log(partbookNum, divaElement.data('diva').getCurrentPageIndex());
+        var comp = this.getComposition(divaElement.data('diva').getCurrentPageIndex());
+        $("#" + partbookNum + "-content").text(pieces2[comp]);
     };
 
     //gets the composition active at a given page number
@@ -92,10 +190,10 @@ function Part(div, num, data)
         //gets the diva index in, subtracts the diva/DIAMM offset
         var adaptedPageNum = Math.max(pageNum - offset, 0);
         //iterates through partbook data
-        for(curComposition in partbookData)
+        for (curComposition in partbookData)
         {
             //return the first composition on that page
-            if(partbookData[curComposition].indexOf(adaptedPageNum) > -1)
+            if (partbookData[curComposition].indexOf(adaptedPageNum) > -1)
             {
                 return curComposition;
             }
@@ -105,7 +203,7 @@ function Part(div, num, data)
 
     this.pagesFor = function(composition)
     {
-        if(partbookData[composition])
+        if (partbookData[composition])
         {
             return partbookData[composition].map(function(el){
                 return (el + offset);
@@ -130,10 +228,11 @@ function PartsController(partArr)
     //realign all parts to the currently stored specific point on the pages
     this.realignPages = function()
     {
-        if(percent == undefined)
+        console.log("realign");
+        if (percent == undefined)
         {
-            for(curPart in parts){
-                if(parts[curPart].pagesFor(currentComposition) !== undefined && (curPart != lastChanged))
+            for (curPart in parts){
+                if (parts[curPart].pagesFor(currentComposition) !== undefined && (curPart != lastChanged))
                 {
                     //if there is no currently store percentage, move to the currently stored page
                     parts[curPart].changeComp(currentComposition);
@@ -142,8 +241,8 @@ function PartsController(partArr)
         }
         else 
         {
-            for(curPart in parts){
-                if(parts[curPart].pagesFor(currentComposition) !== undefined && (curPart != lastChanged))
+            for (curPart in parts){
+                if (parts[curPart].pagesFor(currentComposition) !== undefined && (curPart != lastChanged))
                 {
                     //else do changeCompPartial
                     parts[curPart].changeCompPartial(currentComposition, percent);
@@ -151,14 +250,14 @@ function PartsController(partArr)
             }
         }
 
-        if($("#piece-"+currentComposition).length == 1)
+        /*if($("#piece-"+currentComposition).length == 1)
         {
             $("#piece-" + currentComposition).attr('selected', 'selected');
         }
         else
         {
             $("#piece-default").attr('selected', 'selected');
-        }
+        }*/
 
     };
 
@@ -168,6 +267,11 @@ function PartsController(partArr)
         return currentComposition;
     };
 
+    this.safelyChangeOnePosition = function(partbookNum, newComposition)
+    {
+        parts[partbookNum].updateComposition(newComposition);
+    };
+
     //updates lastChanged and/or currentComposition and/or percent, all "safely" by not immediately overwriting
     this.safelyChangePosition = function(lastChangedIn, newComposition, percentIn)
     {
@@ -175,27 +279,27 @@ function PartsController(partArr)
 
         //six options here: percent is valid or undefined, newComp is changed, unchanged, or undefined
         //if newComp changed ("false" is acceptable as a possible value)
-        if(newComposition !== undefined && (newComposition != currentComposition))
+        if (newComposition !== undefined && (newComposition != currentComposition))
         {
             currentComposition = newComposition;
             //either percent option
             percent = (percentIn === undefined ? 0 : percentIn);
         }
-
-        //if percent is undefined and comp didn't change or is undefined, nothing changes
-        else if(percentIn === undefined)
+        //if percent is undefined and comp didn't change or is undefined, reset percent to undefined so we know to change by full page
+        else if (percentIn === undefined)
         {
+            percent = percentIn;
             return false;
         }
-
         //otherwise percent exists and we should change it, but nothing will change with curComp
-        else if(percentIn !== undefined)
+        else if (percentIn !== undefined)
         {
             percent = percentIn;
         }
 
         //trigger realign
         this.realignPages();
+        console.log("out safe");
         return true;
     };
 
@@ -204,9 +308,9 @@ function PartsController(partArr)
     {
         lastChanged = (lastChangedIn === undefined ? undefined : lastChangedIn);
 
-        for(curPart in parts)
+        for (curPart in parts)
         {
-            if(curPart != lastChanged)
+            if (curPart != lastChanged)
             {
                 parts[curPart].scrollVertical(diff);
             }
@@ -218,9 +322,9 @@ function PartsController(partArr)
     {
         lastChanged = (lastChangedIn === undefined ? undefined : lastChangedIn);
 
-        for(curPart in parts)
+        for (curPart in parts)
         {
-            if(curPart != lastChanged)
+            if (curPart != lastChanged)
             {
                 parts[curPart].scrollHorizontal(diff);
             }
@@ -230,161 +334,49 @@ function PartsController(partArr)
     //zooms every part in by 1
     this.zoomInAll = function()
     {
-        diva.Events.unsubscribe(divaChangeHandle);
-        for(curPart in parts)
+        for (curPart in parts)
         {
             $("#diva-wrapper-" + curPart).data('diva').zoomIn();
         }
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
     //zooms every part out by 1
     this.zoomOutAll = function()
     {
-        diva.Events.unsubscribe(divaChangeHandle);
-        for(curPart in parts)
+        for (curPart in parts)
         {
             $("#diva-wrapper-" + curPart).data('diva').zoomOut();
         }
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
     //returns all to zoom level 2
     this.defaultZoomAll = function()
     {
-        diva.Events.unsubscribe(divaChangeHandle);
-        for(curPart in parts)
+        for (curPart in parts)
         {
             $("#diva-wrapper-" + curPart).data('diva').setZoomLevel(2);
         }
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
     //horizontally centers all parts
     this.horizCenterAll = function()
     {
-        diva.Events.unsubscribe(divaChangeHandle);
-        for(curPart in parts)
+        for (curPart in parts)
         {
             var wrapperWidth = $("#diva-wrapper-" + curPart).width();
             var outerWidth = $("#diva-wrapper-" + curPart).children(".diva-outer").children(".diva-inner").width();
             var centeredLeft = (outerWidth - wrapperWidth) / 2;
             $("#diva-wrapper-" + curPart).children(".diva-outer").scrollLeft(centeredLeft);
         }
-        divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
     };
 
-}
-
-//listener for when diva changes pages
-function divaChangeListener(pageIndex, filename)
-{
-    //as there's one central diva events listener, get the partbook ID from where we were hovering
-    var partbookNum;
-
-    for(curDiva in $(".diva-wrapper"))
+    this.updateAll = function()
     {
-        if($($(".diva-wrapper")[curDiva]).is(":hover"))
+        for (curPart in parts)
         {
-            partbookNum = $($(".diva-wrapper")[curDiva]).attr('id').match(/\d{3}/g);
-            break;
+            parts[curPart].updateComposition();
         }
-    }
-
-    //temporary workaround while the one diva events listener is still nonfunctional - the filename will match the hovered partbookNum if we want it to count
-    if(!filename.match(partbookNum))
-    {
-        return;
-    }
-
-    var newComposition = parts[partbookNum].getComposition(pageIndex);
-    controller.safelyChangePosition(partbookNum, newComposition);
-}
-
-function updateScrollArchive()
-{
-    for(curPart in parts)
-    {
-        parts[curPart].oldScrollX = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft();
-        parts[curPart].oldScrollY = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop();
-    }
-}
-
-function simScrollListener()
-{
-    //we only want the one the mouse is over currently
-    if(!$(this).is(":hover"))
-    {
-        return;
-    }
-
-    //temporarily unbind the scroll listener
-    $(".diva-outer").unbind('scroll', simScrollListener);
-
-    //find the scrolled part and its instance
-    var scrolledPart = $(this).parent().attr('id').match(/\d{3}/g)[0];
-    var scrolledDivaInstance = $("#diva-wrapper-" + scrolledPart).data('diva');
-
-    //take care of horizontal scrolling - this can be done by pixels
-    var scrollDiffX = $("#diva-wrapper-" + scrolledPart + " > .diva-outer").scrollLeft() - parts[scrolledPart].oldScrollX;
-
-    if(scrollDiffX !== 0)
-    {
-        controller.scrollHorizontalBy(scrolledPart, scrollDiffX);
-    }
-
-    //get page array and figure out where the initial indices for this composition and the next one are
-    var tempCurrent = controller.getCurrent();
-    var partPageArr = parts[scrolledPart].pagesFor(tempCurrent);
-    
-    //if the composition doesn't exist on that part, scroll by pixels
-    if(!partPageArr)
-    {
-        var scrollDiffY = $("#diva-wrapper-" + scrolledPart + " > .diva-outer").scrollTop() - parts[scrolledPart].oldScrollY;
-
-        controller.scrollVerticalBy(scrolledPart, scrollDiffY);
-    }
-    //else: work by percents
-    else 
-    {
-        var startIndex = partPageArr[0];
-        var endIndex = partPageArr[partPageArr.length - 1] + 1;
-
-        //grab height array for current page and calculate the percentage into the current piece
-        var heightArr = scrolledDivaInstance.getSettings().heightAbovePages;
-        var heightDiff = heightArr[endIndex] - heightArr[startIndex];
-
-        var percent = ($("#diva-wrapper-" + scrolledPart + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
-
-        //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
-        controller.safelyChangePosition(scrolledPart, undefined, percent); 
-    }
-
-    updateScrollArchive();
-    $(".diva-outer").on('scroll', simScrollListener);
-}
-
-function updateStackWith(which)
-{
-    var indexHold = dragAccessedOrder.indexOf(which);
-    var newOrder = [];
-
-    for(var x = 0; x < 6; x++)
-    {
-        if(x !== indexHold)
-        {
-            newOrder.push(dragAccessedOrder[x]);
-        }
-    }
-
-    newOrder.push(dragAccessedOrder[indexHold]);
-
-    dragAccessedOrder = newOrder;
-
-    for(var x = 0; x < 6; x++)
-    {
-        $("#" + dragAccessedOrder[x]).css('z-index', x + 2);
-    }
+    };
 }
 
 $(document).ready(function() 
@@ -399,8 +391,8 @@ $(document).ready(function()
     });
 
     $("#toggleCPanel").on('click', function(){
-        $("#cPanelContent").toggle();
-        $("#toggleCPanel").text(($("#cPanelContent").css('display') == "none" ? "Maximize" : "Minimize"));
+        $("#control-panel-content").toggle();
+        $("#toggleCPanel").text(($("#control-panel-content").css('display') == "none" ? "Maximize" : "Minimize"));
     });
 
     $("#toggleScrolling").on('click', function(){
@@ -441,7 +433,9 @@ $(document).ready(function()
 
             //on-change listener to jump to pieces
             $("#compositionSelect").on('change', function(e){
+                console.log("change called");
                 //temporarily unbind the scroll listener
+                //diva.Events.unsubscribe(divaChangeHandle);
                 if(simultaneousScrolling)
                 {
                     $(".diva-outer").unbind('scroll', simScrollListener);
@@ -456,6 +450,7 @@ $(document).ready(function()
                 {
                     $(".diva-outer").on('scroll', simScrollListener);
                 }
+                //divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
             });
 
             //create parts
@@ -479,7 +474,7 @@ $(document).ready(function()
             {
                 loadedCount += 1;
                 //once all five divas have loaded
-                if(loadedCount == $('.diva-wrapper').length)
+                if (loadedCount == $('.diva-wrapper').length)
                 {
                     //add minimize buttons in place of zoom labels
                     $('.diva-tools-left').append("<br><button class='minimizer'>Minimize</button>");
@@ -487,11 +482,17 @@ $(document).ready(function()
                     $('.diva-page-label').before('<br>');
 
                     curTitleIndex = $(".diva-title").length;
-                    while(curTitleIndex--)
+                    while (curTitleIndex--)
                     {
                         var curTitle = $($(".diva-title")[curTitleIndex]);
+                        var curKey = curTitle.parent().attr('id').match(/\d{3}/g);
                         var target = $(curTitle.parent().children(".diva-tools").children(".diva-tools-right"));
                         curTitle.insertBefore(target);
+
+                        $("#current-pieces").prepend("<div class='part-info' id='" + curKey + "-info'>" +
+                                curTitle.text() + ": " +
+                                "<span id='" + curKey + "-content'>---</span>" +
+                            "</div>");
                     }
 
                     $(".diva-tools > .diva-tools-left").css('z-index', 2);
@@ -531,7 +532,7 @@ $(document).ready(function()
                     dragAccessedOrder.push($($('.control-panel-container')[0]).attr('id'));
 
                     var curDiva = $('.diva-wrapper').length;
-                    while(curDiva--)
+                    while (curDiva--)
                     {
                         dragAccessedOrder.push($($('.diva-wrapper')[curDiva]).attr('id'));
                     }
