@@ -162,9 +162,14 @@ function Part(div, num, data)
         {
             return;
         }
-        var comp = this.getComposition(divaElement.data('diva').getCurrentPageIndex());
+        var comp = this.getCurrentComposition();
         $("#" + partbookNum + "-content").text(pieces2[comp]);
     };
+
+    this.getCurrentComposition = function()
+    {
+        return this.getComposition(divaElement.data('diva').getCurrentPageIndex())
+    }
 
     //gets the composition active at a given page number
     this.getComposition = function(pageNum)
@@ -228,6 +233,8 @@ function PartsController(partArr)
                 }
             }
         }
+
+        updateScrollArchive();
         return true;
     };
 
