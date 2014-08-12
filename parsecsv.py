@@ -19,7 +19,7 @@ for curFile in fileList:
 
 	for curLine in csvDict:
 		if curLine['compositionKey'] not in pieces:
-			pieces[curLine['compositionKey']] = curLine['text_incipit_standard Copy'] 
+			pieces[curLine['compositionKey']] = curLine['text_incipit_standard Copy'] + " - " + curLine['composerStandard']
 
 		pageRange = range(int(curLine['folio_start']) - 1, int(curLine['folio_end'])) #-1 because diva is 0-index
 		csvDicts[dictIndex][curLine['compositionKey']] = pageRange 
