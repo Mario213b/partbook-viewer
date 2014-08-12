@@ -23,14 +23,11 @@ function divaChangeListener(pageIndex, filename)
 
 function updateScrollArchive()
 {
-    //var string = "";
     for (curPart in parts)
     {
         parts[curPart].oldScrollX = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollLeft();
         parts[curPart].oldScrollY = $("#diva-wrapper-" + curPart + " > .diva-outer").scrollTop();
-        //string += curPart + ": " + parts[curPart].oldScrollY + "| ";
     }
-    //console.log(string);
 }
 
 function simScrollListener()
@@ -162,30 +159,49 @@ function Part(div, num, data)
         {
             return;
         }
-        var comp = this.getCurrentComposition();
-        $("#" + partbookNum + "-content").text(pieces2[comp]);
+        
+        var comp = this.getCurrentComposition(true);
+        if(comp.length == 0)
+        {
+            $("#" + partbookNum + "-content").text("---");
+            return;
+        }
+        var compArr = [];
+        $.each(comp, function(idx, num){
+            compArr.push("-" + pieces2[num]);
+        });
+        compArr = compArr.join('<br>');
+        $("#" + partbookNum + "-content").html(compArr);
     };
 
-    this.getCurrentComposition = function()
+    this.getCurrentComposition = function(all)
     {
-        return this.getComposition(divaElement.data('diva').getCurrentPageIndex())
-    }
+        return this.getComposition(divaElement.data('diva').getCurrentPageIndex(), all);
+    };
 
     //gets the composition active at a given page number
-    this.getComposition = function(pageNum)
+    this.getComposition = function(pageNum, all)
     {
+        all = (typeof(all) === undefined ? false : all);
         //gets the diva index in, subtracts the diva/DIAMM offset
         var adaptedPageNum = Math.max(pageNum - offset, 0);
+
+        var compList = [];
         //iterates through partbook data
         for (curComposition in partbookData)
         {
             //return the first composition on that page
             if (partbookData[curComposition].indexOf(adaptedPageNum) > -1)
             {
-                return curComposition;
+                compList.push(curComposition);
             }
         }
-        return false;
+        if(!compList.length)
+            return [];
+        else if(all)
+            return compList;
+        else
+            return compList[0];
     };
 
     this.pagesFor = function(composition)
@@ -314,7 +330,6 @@ $(document).ready(function()
 {        
     //control panel is draggable
     $(".control-panel").draggable({
-        containment: "window",
         start: function(e, ui)
         {
             updateStackWith(ui.helper.parent().attr('id'));
@@ -419,7 +434,7 @@ $(document).ready(function()
 
                         $("#current-pieces").prepend("<div class='part-info' id='" + curKey + "-info'>" +
                                 curTitle.text() + ": " +
-                                "<span id='" + curKey + "-content'>---</span>" +
+                                "<br><div id='" + curKey + "-content' class='page-content'>---</div>" +
                             "</div>");
                     }
 
@@ -473,7 +488,6 @@ $(document).ready(function()
 
                     //make draggable
                     $('.diva-wrapper').draggable({
-                        containment: "parent",
                         start: function(e, ui)
                         {
                             updateStackWith(ui.helper.attr('id'));
