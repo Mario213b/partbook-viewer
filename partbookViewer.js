@@ -116,20 +116,22 @@ function Part(div, num, data)
         zoomLevel: 2
     });
 
+    this.divaData = divaElement.data('diva');
+
     //changes currently visible page
     this.changeComp = function(compositionID)
     {
         //get the initial page index for the composition ID, add the amount of pages that Diva/DIAMM add
         var pageIndex = partbookData[compositionID][0] + offset;
         //change to the correct page
-        divaElement.data('diva').gotoPageByIndex(pageIndex);
+        this.divaData.gotoPageByIndex(pageIndex);
     };
 
     //scrolls currently visible page to a different position down the page
     this.changeCompPartial = function(compositionID, percent)
     {
         //grab the heightAbovePages array and array of page indices
-        var heightArr = divaElement.data('diva').getSettings().heightAbovePages;
+        var heightArr = this.divaData.getSettings().pageTopOffsets;
         var pagesArr = this.pagesFor(compositionID);
 
         //get the top pixel values for the first page and the page after the last
@@ -176,7 +178,7 @@ function Part(div, num, data)
 
     this.getCurrentComposition = function(all)
     {
-        return this.getComposition(divaElement.data('diva').getCurrentPageIndex(), all);
+        return this.getComposition(this.divaData.getCurrentPageIndex(), all);
     };
 
     //gets the composition active at a given page number
@@ -421,8 +423,12 @@ $(document).ready(function()
                 {
                     //add minimize buttons in place of zoom labels
                     $('.diva-tools-left').append("<br><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button>");
+                    
+                    //add prev/next buttons
+                    $('.diva-page-nav').prepend("<div class='button page-prev-button'></div><div class='button page-next-button'></div><br>");
+                    
                     $('.diva-buttons-label').css('display', 'none');
-                    $('.diva-page-label').before('<br>');
+                    $('.diva-page-label').css('margin-right', '5px');
 
                     curTitleIndex = $(".diva-title").length;
                     while (curTitleIndex--)
@@ -476,14 +482,31 @@ $(document).ready(function()
                         var endIndex = partPageArr[partPageArr.length - 1] + 1;
 
                         //grab height array for current page and calculate the percentage into the current piece
-                        var heightArr = scrolledDivaInstance.getSettings().heightAbovePages;
+                        var heightArr = scrolledDivaInstance.getSettings().pageTopOffsets;
                         var heightDiff = heightArr[endIndex] - heightArr[startIndex];
 
                         var percent = ($("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
 
                         //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
                         controller.safelyChangeToPiece(partbookNum, curComposition, percent); 
-    
+                    });
+
+                    $(".page-next-button").on('click', function(e)
+                    {
+                        var wrapperParent = $(e.target).closest('.diva-wrapper');
+                        //get the id of the partbook
+                        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
+                        var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
+                        parts[partbookNum].divaData.gotoPageByIndex(currentPage + 1);
+                    });
+
+                    $(".page-prev-button").on('click', function(e)
+                    {
+                        var wrapperParent = $(e.target).closest('.diva-wrapper');
+                        //get the id of the partbook
+                        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
+                        var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
+                        parts[partbookNum].divaData.gotoPageByIndex(currentPage - 1);
                     });
 
                     //make draggable

@@ -4,6 +4,7 @@ body, html{
 	height:100%;
 	padding:0px;
 	margin:0px;
+	overflow:hidden;
 }
 .diva-wrapper{
 	max-height:50%;
@@ -77,6 +78,7 @@ select{
 .toolbar-button{
 	line-height:10px;
 	float:left;
+	margin-left:-1px;
 }
 
 .diva-tools .diva-tools-right {
@@ -85,13 +87,12 @@ select{
 	z-index:5;
 }
 .diva-tools .diva-tools-right .diva-page-nav {
-	padding-top:5px;
 	padding-right:0px;
-	font-size:10pt;
-	line-height:1em;
+	line-height:16px;
 }
 
 .diva-tools .diva-tools-right .diva-page-nav .diva-goto-form {
+	font-size:10pt;
 	margin-right:-2px;
 	display: inline;
 	z-index: inherit;
@@ -102,6 +103,26 @@ select{
 	padding-right:0;
 	display: inline;
 }
+
+.diva-tools .diva-tools-right .diva-page-nav .page-prev-button{
+	background-image: url("glyphicons_210_left_arrow.png");
+	bacground-repeat: no-repeat;
+	background-size: 90% 90%;
+	height:1em;
+	width:1em;
+	padding:2px;
+	display: inline-block;
+}
+.diva-tools .diva-tools-right .diva-page-nav .page-next-button{
+	background-image: url("glyphicons_211_right_arrow.png");
+	bacground-repeat: no-repeat;
+	background-size: 90% 90%;
+	height:1em;
+	width:1em;
+	padding:2px;
+	display: inline-block;
+}
+
 .diva-tools .diva-tools-left .diva-buttons-label {
     display: none;
 }
