@@ -89,6 +89,70 @@ function updateStackWith(which)
     }
 }
 
+function reapplyButtonListeners()
+{
+    $('.minimizer').on('click', function(e)
+    {
+        //when minimize is clicked
+        var wrapperParent = $(e.target).closest('.diva-wrapper');
+        wrapperParent.hide();
+        //get the id of the partbook
+        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
+        //add a way to maximize it to the control panel
+        $("#" + partbookNum + "-content").html("<button class='maximizer'>Maximize</button>");
+
+        //when that is clicked
+        $('.maximizer').on('click', function(e)
+        {
+            //get the ID and maximize
+            var partbookNum = $(this).parent().attr('id').match(/\d{3}/g);
+            $("#" + partbookNum + "-content").html("");
+            parts[partbookNum].updateComposition();
+            $("#diva-wrapper-" + partbookNum).show();
+        });
+    });
+
+    $('.aligner').on('click', function(e)
+    {
+        var wrapperParent = $(e.target).closest('.diva-wrapper');
+        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
+        var scrolledDivaInstance = $("#diva-wrapper-"+partbookNum).data('diva');
+
+        var curComposition = parts[partbookNum].getComposition(scrolledDivaInstance.getCurrentPageIndex());
+        var partPageArr = parts[partbookNum].pagesFor(curComposition);
+//TODO: add IF statement here if this exists
+        var startIndex = partPageArr[0];
+        var endIndex = partPageArr[partPageArr.length - 1] + 1;
+
+        //grab height array for current page and calculate the percentage into the current piece
+        var heightArr = scrolledDivaInstance.getSettings().pageTopOffsets;
+        var heightDiff = heightArr[endIndex] - heightArr[startIndex];
+
+        var percent = ($("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
+
+        //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
+        controller.safelyChangeToPiece(partbookNum, curComposition, percent); 
+    });
+
+    $(".page-next-button").on('click', function(e)
+    {
+        var wrapperParent = $(e.target).closest('.diva-wrapper');
+        //get the id of the partbook
+        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
+        var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
+        parts[partbookNum].divaData.gotoPageByIndex(currentPage + 1);
+    });
+
+    $(".page-prev-button").on('click', function(e)
+    {
+        var wrapperParent = $(e.target).closest('.diva-wrapper');
+        //get the id of the partbook
+        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
+        var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
+        parts[partbookNum].divaData.gotoPageByIndex(currentPage - 1);
+    });
+}
+
 function Part(div, num, data)
 {
     var partbookNum = num;
@@ -327,61 +391,51 @@ function PartsController(partArr)
         
         if(verticallyOriented)
         {
-            $(".diva-wrapper-horizontal").removeClass('.diva-wrapper-horizontal').addClass('diva-wrapper-vertical');
+            $(".diva-wrapper").removeClass('diva-wrapper-horizontal').addClass('diva-wrapper-vertical');
             $(".diva-outer-horizontal").removeClass('diva-outer-horizontal').addClass('diva-outer-vertical');
             $(".diva-tools").removeClass('diva-tools-horizontal');
-            $(".diva-horizontal-buttons").remove();
+            $(".diva-horizontal-buttons .page-prev-button").remove();
+            $(".diva-horizontal-buttons .page-next-button").remove();
+            $(".diva-tools-left").removeClass('diva-horizontal-buttons');
             $(".diva-tools-left").append("<br><div class='button-wrapper'><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button></div>");
+            $(".diva-tools-right .button-wrapper").remove();
+            $(".diva-tools-right").removeClass('diva-horizontal-not-buttons');
+            $(".diva-page-nav br").remove();
             $(".diva-page-nav").prepend("<div class='button page-next-button' title='Next page'></div><div class='button page-prev-button' title='Previous page'></div><br>");
             $(".page-prev-button").css('background-image', 'url("glyphicons_213_up_arrow.png")');
             $(".page-next-button").css('background-image', 'url("glyphicons_212_down_arrow.png")');
         }
         else
         {
-            $(".diva-wrapper-vertical").removeClass('.diva-wrapper-vertical').addClass('diva-wrapper-horizontal');
+            $(".diva-wrapper").removeClass('diva-wrapper-vertical').addClass('diva-wrapper-horizontal');
             $(".diva-outer-vertical").removeClass('diva-outer-vertical').addClass('diva-outer-horizontal');
+            $(".diva-tools-left > .button-wrapper").remove();
+            $(".diva-tools-left br").remove();
             $(".diva-tools").addClass('diva-tools-horizontal');
-            $(".diva-tools").append("<div class='diva-horizontal-buttons'></div><div class='diva-horizontal-not-buttons'></div>");
+            $(".diva-tools-left").addClass('diva-horizontal-buttons');
+            $(".diva-tools-left").append("<div class='button page-next-button' title='Next page'></div><div class='button page-prev-button' title='Previous page'></div>");
+            $(".diva-tools-right").append('<div class="button-wrapper"></div>');
+            $(".diva-tools-right").addClass('diva-horizontal-not-buttons');
+            $(".diva-page-nav .page-prev-button").remove();
+            $(".diva-page-nav .page-next-button").remove();
             $(".button-wrapper").remove();
-            $(".page-prev-button").remove();
-            $(".page-next-button").remove();
+            $(".diva-horizontal-not-buttons").addClass('diva-tools-right').append("<div class='button-wrapper'><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button>");
             $(".page-prev-button").css('background-image', 'url("glyphicons_210_left_arrow.png")');
             $(".page-next-button").css('background-image', 'url("glyphicons_211_right_arrow.png")'); 
         }
 
         for(curPart in parts)
         {
-            if(verticallyOriented)
-            {
-
-            }
-            else
-            {
-                var thisToolsLeft = $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-left").html();
-                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-left").remove();
-                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-horizontal-buttons").addClass('diva-tools-left').append(thisToolsLeft +
-                    "<div class='button page-next-button' title='Next page'></div><div class='button page-prev-button' title='Previous page'></div>");      
-                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-horizontal-buttons > br").remove();
-                var thisToolsRight = $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-right").html();
-                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-right").remove();
-                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-horizontal-not-buttons").addClass('diva-tools-right').append(thisToolsRight +
-                    "<div class='button-wrapper'><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button>");
-            }
-
             parts[curPart].divaData.toggleOrientation();
         }
-
-        $(".page-next-button").css({
-            'background-image': 'url("glyphicons_211_right_arrow.png")'});
-        $(".page-prev-button").css({
-            'background-image': 'url("glyphicons_210_left_arrow.png")'});
-
 
         //this gets the diva instances to realize what just happened and update their displays
         $(window).trigger('resize');
 
         //pop the control panel back on top
         updateStackWith('control-panel-container');
+
+        reapplyButtonListeners();
     };
 
     this.updateAll = function()
@@ -515,66 +569,7 @@ $(document).ready(function()
                     $(".diva-tools > .diva-tools-right").css('z-index', 2);
                     $(".diva-tools > .diva-title").css('z-index', 0);
 
-                    $('.minimizer').on('click', function(e)
-                    {
-                        //when minimize is clicked
-                        var wrapperParent = $(e.target).closest('.diva-wrapper');
-                        wrapperParent.hide();
-                        //get the id of the partbook
-                        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
-                        //add a way to maximize it to the control panel
-                        $("#" + partbookNum + "-content").html("<button class='maximizer'>Maximize</button>");
-
-                        //when that is clicked
-                        $('.maximizer').on('click', function(e)
-                        {
-                            //get the ID and maximize
-                            var partbookNum = $(this).parent().attr('id').match(/\d{3}/g);
-                            $("#" + partbookNum + "-content").html("");
-                            parts[partbookNum].updateComposition();
-                            $("#diva-wrapper-" + partbookNum).show();
-                        });
-                    });
-
-                    $('.aligner').on('click', function(e)
-                    {
-                        var wrapperParent = $(e.target).closest('.diva-wrapper');
-                        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
-                        var scrolledDivaInstance = $("#diva-wrapper-"+partbookNum).data('diva');
-
-                        var curComposition = parts[partbookNum].getComposition(scrolledDivaInstance.getCurrentPageIndex());
-                        var partPageArr = parts[partbookNum].pagesFor(curComposition);
-
-                        var startIndex = partPageArr[0];
-                        var endIndex = partPageArr[partPageArr.length - 1] + 1;
-
-                        //grab height array for current page and calculate the percentage into the current piece
-                        var heightArr = scrolledDivaInstance.getSettings().pageTopOffsets;
-                        var heightDiff = heightArr[endIndex] - heightArr[startIndex];
-
-                        var percent = ($("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
-
-                        //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
-                        controller.safelyChangeToPiece(partbookNum, curComposition, percent); 
-                    });
-
-                    $(".page-next-button").on('click', function(e)
-                    {
-                        var wrapperParent = $(e.target).closest('.diva-wrapper');
-                        //get the id of the partbook
-                        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
-                        var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
-                        parts[partbookNum].divaData.gotoPageByIndex(currentPage + 1);
-                    });
-
-                    $(".page-prev-button").on('click', function(e)
-                    {
-                        var wrapperParent = $(e.target).closest('.diva-wrapper');
-                        //get the id of the partbook
-                        var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
-                        var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
-                        parts[partbookNum].divaData.gotoPageByIndex(currentPage - 1);
-                    });
+                    reapplyButtonListeners();
 
                     //make draggable
                     $('.diva-wrapper').draggable({
