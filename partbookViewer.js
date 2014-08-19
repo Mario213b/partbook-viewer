@@ -420,6 +420,7 @@ function PartsController(partArr)
             $(".diva-tools-right").addClass('diva-horizontal-not-buttons');
             $(".diva-page-nav .page-prev-button").remove();
             $(".diva-page-nav .page-next-button").remove();
+            $(".diva-page-nav br").remove();
             $(".button-wrapper").remove();
             $(".diva-horizontal-not-buttons").addClass('diva-tools-right').append("<div class='button-wrapper'><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button>");
             $(".page-prev-button").css('background-image', 'url("glyphicons_210_left_arrow.png")');
