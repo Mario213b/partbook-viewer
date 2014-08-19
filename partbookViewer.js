@@ -120,15 +120,15 @@ function reapplyButtonListeners()
 
         var curComposition = parts[partbookNum].getComposition(scrolledDivaInstance.getCurrentPageIndex());
         var partPageArr = parts[partbookNum].pagesFor(curComposition);
-//TODO: add IF statement here if this exists
+
         var startIndex = partPageArr[0];
         var endIndex = partPageArr[partPageArr.length - 1] + 1;
 
         //grab height array for current page and calculate the percentage into the current piece
-        var heightArr = scrolledDivaInstance.getSettings().pageTopOffsets;
-        var heightDiff = heightArr[endIndex] - heightArr[startIndex];
+        var heightDiff = scrolledDivaInstance.distanceBeforePage(endIndex) - scrolledDivaInstance.distanceBeforePage(startIndex);
 
-        var percent = ($("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollTop() - heightArr[startIndex]) / heightDiff;
+        var baseDimension = (verticallyOriented ? $("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollTop() : $("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollLeft());
+        var percent = (baseDimension - scrolledDivaInstance.distanceBeforePage(startIndex)) / heightDiff;
 
         //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
         controller.safelyChangeToPiece(partbookNum, curComposition, percent); 
@@ -200,12 +200,12 @@ function Part(div, num, data)
         var pagesArr = this.pagesFor(compositionID);
 
         //get the top pixel values for the first page and the page after the last
-        var firstPageHeight = heightArr[pagesArr[0]];
-        var lastPageHeight = heightArr[pagesArr[pagesArr.length - 1] + 1];
+        var firstPageHeight = this.divaData.distanceBeforePage(pagesArr[0]);
+        var lastPageHeight = this.divaData.distanceBeforePage(pagesArr[pagesArr.length - 1] + 1);
 
         //scroll to the percentage
         var newTop = firstPageHeight + ((lastPageHeight - firstPageHeight) * parseFloat(percent));
-        divaElement.children(".diva-outer").scrollTop(newTop);
+        (verticallyOriented ? divaElement.children(".diva-outer").scrollTop(newTop) : divaElement.children(".diva-outer").scrollLeft(newTop));
         this.updateComposition();
     };
 
@@ -231,6 +231,7 @@ function Part(div, num, data)
         if(comp.length == 0)
         {
             $("#" + partbookNum + "-content").text("---");
+            divaElement.find('.aligner').attr('disabled', 'disabled');
             return;
         }
         var compArr = [];
@@ -239,6 +240,7 @@ function Part(div, num, data)
         });
         compArr = compArr.join('<br>');
         $("#" + partbookNum + "-content").html(compArr);
+        divaElement.find('.aligner').removeAttr('disabled');
     };
 
     this.getCurrentComposition = function(all)
@@ -586,6 +588,8 @@ $(document).ready(function()
                     {
                         dragAccessedOrder.push($($('.diva-wrapper')[curDiva]).attr('id'));
                     }
+
+                    controller.updateAll();
 
                     //subscribe after everything so this doesn't get called accidentally
                     divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
