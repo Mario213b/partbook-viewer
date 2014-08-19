@@ -6,11 +6,21 @@ body, html{
 	margin:0px;
 	overflow:hidden;
 }
-.diva-wrapper{
+.diva-wrapper-vertical{
 	max-height:50%;
 	max-width:33%;
 	height:calc(50% - 15px);
 	width:calc(33% - 10px);
+	display:inline-block;
+	padding:4px;
+	border:thin black solid;
+	background-color:#FFF;
+}
+.diva-wrapper-horizontal{
+	max-height:20%;
+	max-width:100%;
+	height:calc(20% - 15px);
+	width:calc(100% - 10px);
 	display:inline-block;
 	padding:4px;
 	border:thin black solid;
@@ -37,6 +47,7 @@ body, html{
 	background-color:#CCC;
 	position:absolute;
 }
+
 select{
 	width:95%;
 }
@@ -58,8 +69,59 @@ select{
 	margin-left:0.5em;
 }
 
-.diva-outer{
+.diva-tools-horizontal{
+	width:15%;
+	height:100%;
+	display:inline-block;
+	margin-bottom: 0;
+}
+
+.diva-tools-horizontal .diva-title{
+	display:block;
+}
+
+.diva-horizontal-buttons{
+	width:100%;
+	display:block;
+	position:relative;
+	top:1.8em;
+}
+
+.diva-horizontal-buttons .button{
+	float:right;
+}
+
+.diva-horizontal-not-buttons{
+	width:100%;
+	line-height:16px;
+	top:1.3em;
+	display:inline-block;
+	position:relative;
+}
+
+.diva-horizontal-not-buttons .diva-page-nav{
+	width:100%;
+	line-height:16px;
+	display:inline-block;
+	position:relative;
+}
+
+.button-wrapper{
+	position:relative;
+	display:inline-block;
+	margin: 0 auto;
+}
+
+.diva-outer-horizontal{
+	height: calc(100% - 0.3em);
+	display:inline-block;
+	margin-left:4px;
+	width:calc(85% - 0.4em);
+}
+
+.diva-outer-vertical{
 	height:calc(100% - 2.7em);
+
 }
 
 .diva-tools .diva-tools-left .diva-zoom-out-button{
@@ -101,26 +163,44 @@ select{
 	font-size:10pt;
 	line-height:1em;
 	padding-right:0;
+	margin-right:5px;
 	display: inline;
 }
 
-.diva-tools .diva-tools-right .diva-page-nav .page-prev-button{
-	background-image: url("glyphicons_210_left_arrow.png");
-	bacground-repeat: no-repeat;
-	background-size: 90% 90%;
-	height:1em;
-	width:1em;
-	padding:2px;
-	display: inline-block;
+.diva-tools .diva-horizontal-not-buttons .diva-page-nav .diva-goto-form {
+	font-size:10pt;
+	margin-right:-2px;
+	display: inline;
+	z-index: inherit;
 }
-.diva-tools .diva-tools-right .diva-page-nav .page-next-button{
-	background-image: url("glyphicons_211_right_arrow.png");
+.diva-tools .diva-horizontal-not-buttons .diva-page-nav .diva-page-label{
+	font-size:10pt;
+	line-height:1em;
+	padding-right:0;
+	margin-right:5px;
+	display: inline;
+}
+
+.page-prev-button{
+	background-image: url("glyphicons_213_up_arrow.png");
 	bacground-repeat: no-repeat;
 	background-size: 90% 90%;
 	height:1em;
 	width:1em;
 	padding:2px;
 	display: inline-block;
+	position:relative;
+}
+
+.page-next-button{
+	background-image: url("glyphicons_212_down_arrow.png");
+	bacground-repeat: no-repeat;
+	background-size: 90% 90%;
+	height:1em;
+	width:1em;
+	padding:2px;
+	display: inline-block;
+	position:relative;
 }
 
 .diva-tools .diva-tools-left .diva-buttons-label {

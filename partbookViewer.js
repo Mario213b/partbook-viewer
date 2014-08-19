@@ -14,6 +14,7 @@ var scrollTimeout;
 var dragAccessedOrder = [];
 var pieces = {};
 var pieces2 = {};
+var verticallyOriented = true;
 
 //listener for when diva changes pages
 function divaChangeListener(pageIndex, filename)
@@ -285,7 +286,7 @@ function PartsController(partArr)
     {
         for (curPart in parts)
         {
-            $("#diva-wrapper-" + curPart).data('diva').zoomIn();
+            parts[curPart].divaData.zoomIn();
         }
     };
 
@@ -294,7 +295,7 @@ function PartsController(partArr)
     {
         for (curPart in parts)
         {
-            $("#diva-wrapper-" + curPart).data('diva').zoomOut();
+            parts[curPart].divaData.zoomOut();
         }
     };
 
@@ -303,7 +304,7 @@ function PartsController(partArr)
     {
         for (curPart in parts)
         {
-            $("#diva-wrapper-" + curPart).data('diva').setZoomLevel(2);
+            parts[curPart].divaData.setZoomLevel(2);
         }
     };
 
@@ -317,6 +318,70 @@ function PartsController(partArr)
             var centeredLeft = (outerWidth - wrapperWidth) / 2;
             $("#diva-wrapper-" + curPart).children(".diva-outer").scrollLeft(centeredLeft);
         }
+    };
+
+    //toggles orientation on all parts
+    this.toggleOrientationAll = function()
+    {
+        verticallyOriented = !verticallyOriented;
+        
+        if(verticallyOriented)
+        {
+            $(".diva-wrapper-horizontal").removeClass('.diva-wrapper-horizontal').addClass('diva-wrapper-vertical');
+            $(".diva-outer-horizontal").removeClass('diva-outer-horizontal').addClass('diva-outer-vertical');
+            $(".diva-tools").removeClass('diva-tools-horizontal');
+            $(".diva-horizontal-buttons").remove();
+            $(".diva-tools-left").append("<br><div class='button-wrapper'><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button></div>");
+            $(".diva-page-nav").prepend("<div class='button page-next-button' title='Next page'></div><div class='button page-prev-button' title='Previous page'></div><br>");
+            $(".page-prev-button").css('background-image', 'url("glyphicons_213_up_arrow.png")');
+            $(".page-next-button").css('background-image', 'url("glyphicons_212_down_arrow.png")');
+        }
+        else
+        {
+            $(".diva-wrapper-vertical").removeClass('.diva-wrapper-vertical').addClass('diva-wrapper-horizontal');
+            $(".diva-outer-vertical").removeClass('diva-outer-vertical').addClass('diva-outer-horizontal');
+            $(".diva-tools").addClass('diva-tools-horizontal');
+            $(".diva-tools").append("<div class='diva-horizontal-buttons'></div><div class='diva-horizontal-not-buttons'></div>");
+            $(".button-wrapper").remove();
+            $(".page-prev-button").remove();
+            $(".page-next-button").remove();
+            $(".page-prev-button").css('background-image', 'url("glyphicons_210_left_arrow.png")');
+            $(".page-next-button").css('background-image', 'url("glyphicons_211_right_arrow.png")'); 
+        }
+
+        for(curPart in parts)
+        {
+            if(verticallyOriented)
+            {
+
+            }
+            else
+            {
+                var thisToolsLeft = $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-left").html();
+                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-left").remove();
+                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-horizontal-buttons").addClass('diva-tools-left').append(thisToolsLeft +
+                    "<div class='button page-next-button' title='Next page'></div><div class='button page-prev-button' title='Previous page'></div>");      
+                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-horizontal-buttons > br").remove();
+                var thisToolsRight = $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-right").html();
+                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-tools-right").remove();
+                $("#diva-wrapper-" + curPart + " > .diva-tools > .diva-horizontal-not-buttons").addClass('diva-tools-right').append(thisToolsRight +
+                    "<div class='button-wrapper'><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button>");
+            }
+
+            parts[curPart].divaData.toggleOrientation();
+        }
+
+        $(".page-next-button").css({
+            'background-image': 'url("glyphicons_211_right_arrow.png")'});
+        $(".page-prev-button").css({
+            'background-image': 'url("glyphicons_210_left_arrow.png")'});
+
+
+        //this gets the diva instances to realize what just happened and update their displays
+        $(window).trigger('resize');
+
+        //pop the control panel back on top
+        updateStackWith('control-panel-container');
     };
 
     this.updateAll = function()
@@ -401,7 +466,7 @@ $(document).ready(function()
             //create parts
             for(curKey in data['csvData'])
             {
-                $("body").append("<div id='diva-wrapper-" + curKey + "' class='diva-wrapper'></div>");
+                $("body").append("<div id='diva-wrapper-" + curKey + "' class='diva-wrapper diva-wrapper-vertical'></div>");
                 parts[curKey] = new Part('#diva-wrapper-' + curKey, curKey, data['csvData'][curKey]);
                 controller = new PartsController(parts);
             }
@@ -414,6 +479,8 @@ $(document).ready(function()
 
             $("#horizCenterAll").on('click', controller.horizCenterAll);
 
+            $("#toggleOrientation").on('click', controller.toggleOrientationAll);
+
             var loadedCount = 0;
             diva.Events.subscribe('ViewerDidLoad', function()
             {
@@ -421,14 +488,14 @@ $(document).ready(function()
                 //once all five divas have loaded
                 if (loadedCount == $('.diva-wrapper').length)
                 {
+                    $('.diva-outer').addClass('diva-outer-vertical');
                     //add minimize buttons in place of zoom labels
-                    $('.diva-tools-left').append("<br><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button>");
+                    $('.diva-tools-left').append("<br><div class='button-wrapper'><button class='minimizer toolbar-button'>Minimize</button><button class='aligner toolbar-button'>Align others</button></div>");
                     
                     //add prev/next buttons
-                    $('.diva-page-nav').prepend("<div class='button page-prev-button'></div><div class='button page-next-button'></div><br>");
+                    $('.diva-page-nav').prepend("<div class='button page-prev-button' title='Previous page'></div><div class='button page-next-button' title='Next page'></div><br>");
                     
                     $('.diva-buttons-label').css('display', 'none');
-                    $('.diva-page-label').css('margin-right', '5px');
 
                     curTitleIndex = $(".diva-title").length;
                     while (curTitleIndex--)
