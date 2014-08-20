@@ -6,9 +6,12 @@ body, html{
 	margin:0px;
 	overflow:hidden;
 }
+.diva-wrapper{
+	position:relative;
+	}
 .diva-wrapper-vertical{
-	max-height:50%;
-	max-width:33%;
+	min-height:calc(50% - 15px);
+	min-width:calc(33% - 10px);
 	height:calc(50% - 15px);
 	width:calc(33% - 10px);
 	display:inline-block;
@@ -17,10 +20,11 @@ body, html{
 	background-color:#FFF;
 }
 .diva-wrapper-horizontal{
-	max-height:20%;
-	max-width:100%;
+	min-height:calc(20% - 15px);
+	min-width:calc(85% - 10px);
 	height:calc(20% - 15px);
 	width:calc(100% - 10px);
+	max-width:calc(100% - 10px);
 	display:inline-block;
 	padding:4px;
 	border:thin black solid;
@@ -49,7 +53,7 @@ body, html{
 }
 
 select{
-	width:95%;
+	width:300px;
 }
 
 .page-content{
@@ -121,7 +125,6 @@ select{
 
 .diva-outer-vertical{
 	height:calc(100% - 2.9em);
-
 }
 
 .diva-tools .diva-tools-left .diva-zoom-out-button{

@@ -390,10 +390,20 @@ function PartsController(partArr)
     this.toggleOrientationAll = function()
     {
         verticallyOriented = !verticallyOriented;
+
+        $(".diva-wrapper").css({
+            'position': 'relative',
+            'left': 'auto',
+            'top': 'auto'
+        });
         
         if(verticallyOriented)
         {
             $(".diva-wrapper").removeClass('diva-wrapper-horizontal').addClass('diva-wrapper-vertical');
+            $(".diva-wrapper").css({
+                'height': 'calc(50% - 15px)',
+                'width': 'calc(33% - 10px)'
+            });
             $(".diva-outer-horizontal").removeClass('diva-outer-horizontal').addClass('diva-outer-vertical');
             $(".diva-tools").removeClass('diva-tools-horizontal');
             $(".diva-horizontal-buttons .page-prev-button").remove();
@@ -410,6 +420,10 @@ function PartsController(partArr)
         else
         {
             $(".diva-wrapper").removeClass('diva-wrapper-vertical').addClass('diva-wrapper-horizontal');
+            $(".diva-wrapper").css({
+                'height': 'calc(20% - 15px)',
+                'width': 'calc(100% - 10px)'
+            });
             $(".diva-outer-vertical").removeClass('diva-outer-vertical').addClass('diva-outer-horizontal');
             $(".diva-tools-left > .button-wrapper").remove();
             $(".diva-tools-left br").remove();
@@ -438,6 +452,19 @@ function PartsController(partArr)
         //pop the control panel back on top
         updateStackWith('control-panel-container');
 
+        var curDiva = $('.diva-wrapper').length;
+        while (curDiva--)
+        {
+            dragAccessedOrder.push($($('.diva-wrapper')[curDiva]).attr('id'));
+            var selector = $($('.diva-wrapper')[curDiva]);
+            var offset = selector.offset();
+            selector.css({
+                'position': 'absolute',
+                'left': offset.left,
+                'top': offset.top
+            });
+        }
+
         reapplyButtonListeners();
     };
 
@@ -453,7 +480,13 @@ function PartsController(partArr)
 $(document).ready(function() 
 {        
     //control panel is draggable
-    $(".control-panel").draggable({
+    $(".control-panel").resizable({
+        handles: 'all',
+        start: function(e, ui)
+        {
+            updateStackWith(ui.helper.parent().attr('id'));
+        }
+    }).draggable({
         start: function(e, ui)
         {
             updateStackWith(ui.helper.parent().attr('id'));
@@ -575,7 +608,13 @@ $(document).ready(function()
                     reapplyButtonListeners();
 
                     //make draggable
-                    $('.diva-wrapper').draggable({
+                    $('.diva-wrapper').resizable({
+                            handles: 'all',
+                            start: function(e, ui)
+                            {
+                                updateStackWith(ui.helper.attr('id'));
+                            }
+                    }).draggable({
                         start: function(e, ui)
                         {
                             updateStackWith(ui.helper.attr('id'));
@@ -588,8 +627,15 @@ $(document).ready(function()
                     while (curDiva--)
                     {
                         dragAccessedOrder.push($($('.diva-wrapper')[curDiva]).attr('id'));
+                        var selector = $($('.diva-wrapper')[curDiva]);
+                        var offset = selector.offset();
+                        selector.css({
+                            'position': 'absolute',
+                            'left': offset.left,
+                            'top': offset.top
+                        });
                     }
-
+                    //$(window).trigger('resize');
                     controller.updateAll();
 
                     //subscribe after everything so this doesn't get called accidentally
