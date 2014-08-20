@@ -10,8 +10,10 @@ body, html{
 	position:relative;
 	}
 .diva-wrapper-vertical{
-	min-height:calc(50% - 15px);
-	min-width:calc(33% - 10px);
+	/*min-height:calc(50% - 15px);
+	min-width:calc(33% - 10px);*/
+	min-width:300px;
+	min-height:150px;
 	height:calc(50% - 15px);
 	width:calc(33% - 10px);
 	display:inline-block;
@@ -20,8 +22,8 @@ body, html{
 	background-color:#FFF;
 }
 .diva-wrapper-horizontal{
-	min-height:calc(20% - 15px);
-	min-width:calc(85% - 10px);
+	min-height:120px;
+	min-width:750px;
 	height:calc(20% - 15px);
 	width:calc(100% - 10px);
 	max-width:calc(100% - 10px);

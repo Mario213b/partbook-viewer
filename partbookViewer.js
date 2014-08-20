@@ -635,7 +635,7 @@ $(document).ready(function()
                             'top': offset.top
                         });
                     }
-                    //$(window).trigger('resize');
+                    
                     controller.updateAll();
 
                     //subscribe after everything so this doesn't get called accidentally
