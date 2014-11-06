@@ -125,10 +125,22 @@ function reapplyButtonListeners()
         var endIndex = partPageArr[partPageArr.length - 1] + 1;
 
         //grab height array for current page and calculate the percentage into the current piece
-        var heightDiff = scrolledDivaInstance.distanceBeforePage(endIndex) - scrolledDivaInstance.distanceBeforePage(startIndex);
+        var startOffset = scrolledDivaInstance.getPageOffset(startIndex);
+        var endOffset = scrolledDivaInstance.getPageOffset(endIndex);
+        var heightDiff, baseDimension, percent;
+        if(verticallyOriented)
+        {
 
-        var baseDimension = (verticallyOriented ? $("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollTop() : $("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollLeft());
-        var percent = (baseDimension - scrolledDivaInstance.distanceBeforePage(startIndex)) / heightDiff;
+            heightDiff = endOffset.top - startOffset.top;
+            baseDimension = $("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollTop();
+            percent = (baseDimension - startOffset.top) / heightDiff;
+        }
+        else
+        {
+            heightDiff = endOffset.left - startOffset.left;
+            baseDimension = $("#diva-wrapper-" + partbookNum + "> .diva-outer").scrollLeft();
+            percent = (baseDimension - startOffset.left) / heightDiff;
+        }
 
         //change the current position, passing in undefined as the diva listener is called before this; currentComposition will always be up to date
         controller.safelyChangeToPiece(partbookNum, curComposition, percent); 
@@ -200,8 +212,8 @@ function Part(div, num, data)
         var pagesArr = this.pagesFor(compositionID);
 
         //get the top pixel values for the first page and the page after the last
-        var firstPageHeight = this.divaData.distanceBeforePage(pagesArr[0]);
-        var lastPageHeight = this.divaData.distanceBeforePage(pagesArr[pagesArr.length - 1] + 1);
+        var firstPageHeight = (verticallyOriented ? this.divaData.getPageOffset(pagesArr[0]).top : this.divaData.getPageOffset(pagesArr[0]).left);
+        var lastPageHeight = (verticallyOriented ? this.divaData.getPageOffset(pagesArr[pagesArr.length - 1] + 1).top : this.divaData.getPageOffset(pagesArr[pagesArr.length - 1] + 1).left);
 
         //scroll to the percentage
         var newTop = firstPageHeight + ((lastPageHeight - firstPageHeight) * parseFloat(percent));
