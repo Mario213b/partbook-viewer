@@ -1,3 +1,18 @@
+//stolen mercilessly from http://blog.stevenlevithan.com/archives/javascript-roman-numeral-converter
+function romanize (num) {
+    if (!+num)
+        return false;
+    var digits = String(+num).split(""),
+        key = ["","c","cc","ccc","cd","d","dc","dcc","dccc","cm",
+            "","x","xx","xxx","xl","l","lx","lxx","lxxx","xc",
+            "","i","ii","iii","iv","v","vi","vii","viii","ix"],
+        roman = "",
+        i = 3;
+    while (i--)
+        roman = (key[+digits.pop() + (i * 10)] || "") + roman;
+    return Array(+digits.join("") + 1).join("M") + roman;
+}
+
 var parts = {};
 var controller;
 var simultaneousScrolling = false;
@@ -169,10 +184,17 @@ function Part(div, num, data)
 {
     var partbookNum = num;
     var offset = pageOffsets[partbookNum];
+    var romanOffsetDict = {};
     var partbookData = data;
     var divaElement = $(div);
     this.oldScrollX;
     this.oldScrollY;
+
+    var offsetCopy = offset;
+    while(offsetCopy--)
+    {
+        romanOffsetDict[offsetCopy] = romanize(offsetCopy + 1);
+    }
 
     divaElement.diva({
         adaptivePadding: 0,
@@ -184,10 +206,23 @@ function Part(div, num, data)
         enableFullscreen: false,
         enableGridIcon: false,
         enableLinkIcon: false,
+        enablePagealias: true,
         fixedHeightGrid: false,
         iipServerURL: "http://diva.simssa.ca/fcgi-bin/iipsrv.fcgi",
         objectData: "json/" + num + ".json",
         imageDir: "/srv/images/dow_partbooks/" + num,
+        pageAliasFunction: function(originalPageIndex)
+        {
+            if(romanOffsetDict[originalPageIndex] !== undefined)
+            {
+                return romanOffsetDict[originalPageIndex];
+            }
+            else
+            {
+                return originalPageIndex - offset + 1;
+            }
+        },
+        totalPageOffset: -1 * offset, 
         viewerWidthPadding: 0,
         viewerHeightPadding: 0,
         zoomLevel: 2
