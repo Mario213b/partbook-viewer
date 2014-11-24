@@ -167,7 +167,7 @@ function reapplyButtonListeners()
         //get the id of the partbook
         var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
         var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
-        parts[partbookNum].divaData.gotoPageByIndex(currentPage + 1);
+        parts[partbookNum].divaData.gotoPageByIndex(currentPage + 1, "left", "top");
     });
 
     $(".page-prev-button").on('click', function(e)
@@ -176,7 +176,7 @@ function reapplyButtonListeners()
         //get the id of the partbook
         var partbookNum = wrapperParent.attr('id').match(/\d{3}/g);
         var currentPage = parts[partbookNum].divaData.getCurrentPageIndex();
-        parts[partbookNum].divaData.gotoPageByIndex(currentPage - 1);
+        parts[partbookNum].divaData.gotoPageByIndex(currentPage - 1, "left", "top");
     });
 }
 
@@ -236,7 +236,7 @@ function Part(div, num, data)
         //get the initial page index for the composition ID, add the amount of pages that Diva/DIAMM add
         var pageIndex = partbookData[compositionID][0] + offset;
         //change to the correct page
-        this.divaData.gotoPageByIndex(pageIndex);
+        this.divaData.gotoPageByIndex(pageIndex, "left", "top");
     };
 
     //scrolls currently visible page to a different position down the page
@@ -619,8 +619,10 @@ $(document).ready(function()
             $("#toggleOrientation").on('click', controller.toggleOrientationAll);
 
             var loadedCount = 0;
+
             diva.Events.subscribe('ViewerDidLoad', function()
             {
+
                 loadedCount += 1;
                 //once all five divas have loaded
                 if (loadedCount == $('.diva-wrapper').length)
@@ -684,6 +686,8 @@ $(document).ready(function()
                     }
                     
                     controller.updateAll();
+
+                    diva.Events.publish('PanelSizeDidChange');
 
                     //subscribe after everything so this doesn't get called accidentally
                     divaChangeHandle = diva.Events.subscribe('VisiblePageDidChange', divaChangeListener);
