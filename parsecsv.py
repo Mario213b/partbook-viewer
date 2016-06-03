@@ -11,15 +11,15 @@ pageDirectory = [{} for i in range(205)]
 filenames = []
 
 for curFile in fileList:
-	dictIndex = string.split(curFile, ".")[0]
-	csvFile = open('csv/' + curFile, 'rU')
-	csvDict = csv.DictReader(csvFile)
-	csvDicts[dictIndex] = {}
-	filenames.append(dictIndex);
+    dictIndex = string.split(curFile, ".")[0]
+    csvFile = open('csv/' + curFile, 'rU')
+    csvDict = csv.DictReader(csvFile)
+    csvDicts[dictIndex] = {}
+    filenames.append(dictIndex)
 
-	for curLine in csvDict:
-		if curLine['compositionKey'] not in pieces:
-			pieces[curLine['compositionKey']] = curLine['text_incipit_standard Copy'] + " - " + curLine['composerStandard']
+    for curLine in csvDict:
+        if curLine['compositionKey'] not in pieces:
+            pieces[curLine['compositionKey']] = curLine['text_incipit_standard Copy'] + " - " + curLine['composerStandard']
 
         pageRange = range(int(curLine['folio_start']) - 1, int(curLine['folio_end']))  # -1 because diva is 0-index
         csvDicts[dictIndex][curLine['compositionKey']] = pageRange
