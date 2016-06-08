@@ -1,7 +1,6 @@
 import csv
 import os
 import json
-import string
 import operator
 
 fileList = [f for f in os.listdir('csv') if (os.path.isfile('csv/' + f) and f.endswith('.csv'))]
@@ -11,8 +10,8 @@ pageDirectory = [{} for i in range(205)]
 filenames = []
 
 for curFile in fileList:
-    dictIndex = string.split(curFile, ".")[0]
-    csvFile = open('csv/' + curFile, 'rU')
+    dictIndex = curFile.split(".")[0]   # string.split(curFile, ".")[0]
+    csvFile = open('csv/' + curFile, 'r')
     csvDict = csv.DictReader(csvFile)
     csvDicts[dictIndex] = {}
     filenames.append(dictIndex)
@@ -21,7 +20,7 @@ for curFile in fileList:
         if curLine['compositionKey'] not in pieces:
             pieces[curLine['compositionKey']] = curLine['text_incipit_standard Copy'] + " - " + curLine['composerStandard']
 
-        pageRange = range(int(curLine['folio_start']) - 1, int(curLine['folio_end']))  # -1 because diva is 0-index
+        pageRange = list(range(int(curLine['folio_start']) - 1, int(curLine['folio_end'])))  # -1 because diva is 0-index
         csvDicts[dictIndex][curLine['compositionKey']] = pageRange
 
         for curPage in pageRange:
@@ -41,7 +40,7 @@ print(json.dumps(pageDirectory, indent=4))
 csvDictOut.writer.writerow(filenames)
 csvDictOut.writerows(pageDirectory)
 
-sortedPieces = sorted(pieces.iteritems(), key=operator.itemgetter(1))
+sortedPieces = sorted(pieces.items(), key=operator.itemgetter(1))
 
 assembledDict = {'pieces': sortedPieces, 'debugPieces': pieces, 'csvData': csvDicts}
 
